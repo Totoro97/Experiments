@@ -1,5 +1,6 @@
 import bpy
 import math, os
+from mathutils import Matrix, Vector
 
 def GenerateCameras(num_camera) :
     for i in range(num_camera) :
@@ -25,3 +26,129 @@ def GenerateRenderResult() :
             file = os.path.join("C:/tmp", ob.name )
             bpy.context.scene.render.filepath = file
             bpy.ops.render.render( write_still=True )
+
+import bpy
+from mathutils import Matrix, Vector
+
+#---------------------------------------------------------------------------------------------------
+# 3x4 P matrix from Blender camera
+# Reference: https://blender.stackexchange.com/questions/38009/3x4-camera-matrix-from-blender-camera
+#---------------------------------------------------------------------------------------------------
+
+# BKE_camera_sensor_size
+def GetSenserSize(sensor_fit, sensor_x, sensor_y):
+    if sensor_fit == 'VERTICAL':
+        return sensor_y
+    return sensor_x
+
+# BKE_camera_sensor_fit
+def GetSensorFit(sensor_fit, size_x, size_y):
+    if sensor_fit == 'AUTO':
+        if size_x >= size_y:
+            return 'HORIZONTAL'
+        else:
+            return 'VERTICAL'
+    return sensor_fit
+
+# Build intrinsic camera parameters from Blender camera data
+#
+# See notes on this in 
+# blender.stackexchange.com/questions/15102/what-is-blenders-camera-projection-matrix-model
+# as well as
+# https://blender.stackexchange.com/a/120063/3581
+def GetCalibrationMatrixKFromBlender(camd):
+    if camd.type != 'PERSP':
+        raise ValueError('Non-perspective cameras not supported')
+    scene = bpy.context.scene
+    f_in_mm = camd.lens
+    scale = scene.render.resolution_percentage / 100
+    resolution_x_in_px = scale * scene.render.resolution_x
+    resolution_y_in_px = scale * scene.render.resolution_y
+    sensor_size_in_mm = GetSenserSize(camd.sensor_fit, camd.sensor_width, camd.sensor_height)
+    sensor_fit = GetSensorFit(
+        camd.sensor_fit,
+        scene.render.pixel_aspect_x * resolution_x_in_px,
+        scene.render.pixel_aspect_y * resolution_y_in_px
+    )
+    pixel_aspect_ratio = scene.render.pixel_aspect_y / scene.render.pixel_aspect_x
+    if sensor_fit == 'HORIZONTAL':
+        view_fac_in_px = resolution_x_in_px
+    else:
+        view_fac_in_px = pixel_aspect_ratio * resolution_y_in_px
+    pixel_size_mm_per_px = sensor_size_in_mm / f_in_mm / view_fac_in_px
+    s_u = 1 / pixel_size_mm_per_px
+    s_v = 1 / pixel_size_mm_per_px / pixel_aspect_ratio
+
+    # Parameters of intrinsic calibration matrix K
+    u_0 = resolution_x_in_px / 2 - camd.shift_x * view_fac_in_px
+    v_0 = resolution_y_in_px / 2 + camd.shift_y * view_fac_in_px / pixel_aspect_ratio
+    skew = 0 # only use rectangular pixels
+
+    K = Matrix(
+        ((s_u, skew, u_0),
+        (   0,  s_v, v_0),
+        (   0,    0,   1)))
+    return K
+
+# Returns camera rotation and translation matrices from Blender.
+# 
+# There are 3 coordinate systems involved:
+#    1. The World coordinates: "world"
+#       - right-handed
+#    2. The Blender camera coordinates: "bcam"
+#       - x is horizontal
+#       - y is up
+#       - right-handed: negative z look-at direction
+#    3. The desired computer vision camera coordinates: "cv"
+#       - x is horizontal
+#       - y is down (to align to the actual pixel coordinates 
+#         used in digital images)
+#       - right-handed: positive z look-at direction
+
+def Get3x4RTMatrixFromBlender(cam):
+    # bcam stands for blender camera
+    R_bcam2cv = Matrix(
+        ((1, 0,  0),
+        (0, -1, 0),
+        (0, 0, -1)))
+
+    # Transpose since the rotation is object rotation, 
+    # and we want coordinate rotation
+    # R_world2bcam = cam.rotation_euler.to_matrix().transposed()
+    # T_world2bcam = -1*R_world2bcam * location
+    #
+    # Use matrix_world instead to account for all constraints
+    location, rotation = cam.matrix_world.decompose()[0:2]
+    R_world2bcam = rotation.to_matrix().transposed()
+
+    # Convert camera location to translation vector used in coordinate changes
+    # T_world2bcam = -1*R_world2bcam*cam.location
+    # Use location from matrix_world to account for constraints:     
+    T_world2bcam = -1*R_world2bcam * location
+
+    # Build the coordinate transform matrix from world to computer vision camera
+    R_world2cv = R_bcam2cv*R_world2bcam
+    T_world2cv = R_bcam2cv*T_world2bcam
+
+    # put into 3x4 matrix
+    RT = Matrix((
+        R_world2cv[0][:] + (T_world2cv[0],),
+        R_world2cv[1][:] + (T_world2cv[1],),
+        R_world2cv[2][:] + (T_world2cv[2],)
+        ))
+    return R_world2cv, T_world2cv, RT
+
+def Get3x4PMatrixFromBlender(cam):
+    K = GetCalibrationMatrixKFromBlender(cam.data)
+    R, T, RT = Get3x4RTMatrixFromBlender(cam)
+    return K, R, T
+
+f = open('C:/Users/Aska/Project/ReproduceThem/ReconstructThin/Camera.out', 'w')
+text = ''
+for cam in bpy.context.scene.objects :
+    if cam.type != 'CAMERA' :
+        continue
+    K, R, T = Get3x4PMatrixFromBlender(cam)
+    text += str(K) + '\n'
+f.write(text)
+f.close()
