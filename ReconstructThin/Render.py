@@ -22,13 +22,16 @@ def GenerateRenderResult() :
     for ob in bpy.context.scene.objects:
         if ob.type == 'CAMERA':
             bpy.context.scene.camera = ob
-            print('Set camera %s' % ob.name )
-            file = os.path.join("C:/tmp", ob.name )
+            cam_name = ob.name
+            cam_id = 0
+            for i in range(32) :
+                if str(i) in cam_name :
+                    cam_id = i
+            print('Set camera %s' % ob.name)
+            file = os.path.join(
+                "C:/Users/Aska/Project/ReproduceThem/ReconstructThin/data", str(cam_id))
             bpy.context.scene.render.filepath = file
             bpy.ops.render.render( write_still=True )
-
-import bpy
-from mathutils import Matrix, Vector
 
 #---------------------------------------------------------------------------------------------------
 # 3x4 P matrix from Blender camera
@@ -143,21 +146,26 @@ def Get3x4PMatrixFromBlender(cam):
     R, T, RT = Get3x4RTMatrixFromBlender(cam)
     return K, R, T
 
-f = open('C:/Users/Aska/Project/ReproduceThem/ReconstructThin/Cameras.txt', 'w')
-text = ''
-for cam in bpy.context.scene.objects :
-    if cam.type != 'CAMERA' :
-        continue
-    K, R, T = Get3x4PMatrixFromBlender(cam)
-    for i in range(3) :
-        for j in range(3) :
-            text += str(K[i][j]) + ' '
-        text += '\n'
-    for i in range(3) :
-        for j in range(3) :
-            text += str(R[i][j]) + ' '
-        text += '\n'
-    for i in range(3) :
-        text += str(T[i]) + '\n'
-f.write(text)
-f.close()
+def GetCameraMatrixFromBlender() :
+    f = open('C:/Users/Aska/Project/ReproduceThem/ReconstructThin/data/Cameras.txt', 'w')
+    text = ''
+    for cam in bpy.context.scene.objects :
+        if cam.type != 'CAMERA' :
+            continue
+        K, R, T = Get3x4PMatrixFromBlender(cam)
+        for i in range(3) :
+            for j in range(3) :
+                text += str(K[i][j]) + ' '
+            text += '\n'
+        for i in range(3) :
+            for j in range(3) :
+                text += str(R[i][j]) + ' '
+            text += '\n'
+        for i in range(3) :
+            text += str(T[i]) + '\n'
+    f.write(text)
+    f.close()
+
+if __name__ == '__main__' :
+    GenerateRenderResult()
+    GetCameraMatrixFromBlender()
