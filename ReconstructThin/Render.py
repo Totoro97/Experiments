@@ -143,12 +143,21 @@ def Get3x4PMatrixFromBlender(cam):
     R, T, RT = Get3x4RTMatrixFromBlender(cam)
     return K, R, T
 
-f = open('C:/Users/Aska/Project/ReproduceThem/ReconstructThin/Camera.out', 'w')
+f = open('C:/Users/Aska/Project/ReproduceThem/ReconstructThin/Cameras.txt', 'w')
 text = ''
 for cam in bpy.context.scene.objects :
     if cam.type != 'CAMERA' :
         continue
     K, R, T = Get3x4PMatrixFromBlender(cam)
-    text += str(K) + '\n'
+    for i in range(3) :
+        for j in range(3) :
+            text += str(K[i][j]) + ' '
+        text += '\n'
+    for i in range(3) :
+        for j in range(3) :
+            text += str(R[i][j]) + ' '
+        text += '\n'
+    for i in range(3) :
+        text += str(T[i]) + '\n'
 f.write(text)
 f.close()
