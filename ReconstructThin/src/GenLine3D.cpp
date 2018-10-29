@@ -13,7 +13,7 @@
 #include <list>
 
 void AddImgs(std::string file_path, L3DPP::Line3D *line_3D) {
-  int num_cam = 32;
+  int num_cam = 64;
   
   // Load Camera matrix.
   auto matrix_file_name = file_path + std::string("/Cameras.txt");
