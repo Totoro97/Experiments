@@ -1,18 +1,15 @@
-#include <line3D.h>
+#include "LineGenerator.h"
+
 // opencv
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-// Eigen
-#include <eigen3/Eigen/Eigen>
+
 // std
 #include <cstdio>
 #include <iostream>
-#include <string>
-#include <vector>
-#include <list>
 
-void AddImgs(std::string file_path, L3DPP::Line3D *line_3D) {
+void LineGenerator::AddImgs(std::string file_path, L3DPP::Line3D *line_3D) {
   int num_cam = 64;
   
   // Load Camera matrix.
@@ -61,9 +58,8 @@ void AddImgs(std::string file_path, L3DPP::Line3D *line_3D) {
     );
   }
 }
-
-int main() {
-  auto line_3D = new L3DPP::Line3D(
+void LineGenerator::GenerateLine() {
+  line_3D_ = new L3DPP::Line3D(
     std::string("."),
     L3D_DEF_LOAD_AND_STORE_SEGMENTS,
     L3D_DEF_MAX_IMG_WIDTH,
@@ -71,9 +67,21 @@ int main() {
     false,
     false // use_gpu
   );
-  AddImgs(std::string("../data"), line_3D);
-  line_3D->matchImages();
-  line_3D->reconstruct3Dlines();
-  line_3D->saveResultAsSTL(std::string("."));
-  return 0;
+  AddImgs(work_path_, line_3D_);
+  line_3D_->matchImages();
+  line_3D_->reconstruct3Dlines();
+}
+
+
+void LineGenerator::GetSegment3D(std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> >* segments) {
+  std::vector<L3DPP::FinalLine3D> result;
+  line_3D_ -> GetLine3D(result);
+  for (const L3DPP::FinalLine3D &line : result) {
+    for (const L3DPP::Segment3D &segment : line.collinear3Dsegments_) {
+      auto p1 = segment.p1();
+      auto p2 = segment.p2();
+      segments->push_back(std::make_pair(p1, p2));
+    }
+  }
+  return;
 }
