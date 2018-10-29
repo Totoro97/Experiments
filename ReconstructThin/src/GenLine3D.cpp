@@ -7,6 +7,7 @@
 #include <eigen3/Eigen/Eigen>
 // std
 #include <cstdio>
+#include <iostream>
 #include <string>
 #include <vector>
 #include <list>
@@ -15,8 +16,8 @@ void AddImgs(std::string file_path, L3DPP::Line3D *line_3D) {
   int num_cam = 32;
   
   // Load Camera matrix.
-  auto matrix_file_name = file_path + std::string("matrix.txt");
-  FILE *f = fopen(file_path.c_str(), "r");
+  auto matrix_file_name = file_path + std::string("/Cameras.txt");
+  FILE *f = fopen(matrix_file_name.c_str(), "r");
   std::vector<Eigen::Matrix3d> Ks, Rs;
   std::vector<Eigen::Vector3d> Ts;
   for (int i = 0; i < num_cam; i++) {
@@ -48,7 +49,7 @@ void AddImgs(std::string file_path, L3DPP::Line3D *line_3D) {
 
   // load & add img
   for (int i = 0; i < num_cam; i++) {
-    auto file_name = file_path + std::string("") + std::to_string(num_cam) + std::string(".png");
+    auto file_name = file_path + std::string("/") + std::to_string(i) + std::string(".png");
     cv::Mat img = cv::imread(file_name);
     auto neighbors = std::list<unsigned int>{
       static_cast<unsigned int>((i + 1) % num_cam), 
@@ -62,14 +63,14 @@ void AddImgs(std::string file_path, L3DPP::Line3D *line_3D) {
 
 int main() {
   auto line_3D = new L3DPP::Line3D(
-    std::string(""),
+    std::string("."),
     L3D_DEF_LOAD_AND_STORE_SEGMENTS,
     L3D_DEF_MAX_IMG_WIDTH,
     L3D_DEF_MAX_NUM_SEGMENTS,
     false,
     false // use_gpu
   );
-  AddImgs(std::string("./"), line_3D);
+  AddImgs(std::string("../data"), line_3D);
   line_3D->matchImages();
   line_3D->reconstruct3Dlines();
   line_3D->saveResultAsOBJ(std::string(""));
