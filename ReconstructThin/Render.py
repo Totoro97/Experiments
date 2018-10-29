@@ -18,13 +18,13 @@ def GenerateCameras(num_camera) :
         bpy.context.object.constraints["Track To"].track_axis = 'TRACK_NEGATIVE_Z'
         bpy.context.object.constraints["Track To"].up_axis = 'UP_Y'
 
-def GenerateRenderResult() :
+def GenerateRenderResult(num_cam) :
     for ob in bpy.context.scene.objects:
         if ob.type == 'CAMERA':
             bpy.context.scene.camera = ob
             cam_name = ob.name
             cam_id = 0
-            for i in range(32) :
+            for i in range(num_cam) :
                 if str(i) in cam_name :
                     cam_id = i
             print('Set camera %s' % ob.name)
@@ -168,5 +168,6 @@ def GetCameraMatrixFromBlender() :
     f.close()
 
 if __name__ == '__main__' :
-    GenerateRenderResult()
+    GenerateCameras(32)
+    GenerateRenderResult(32)
     GetCameraMatrixFromBlender()
