@@ -153,6 +153,7 @@ def GetCameraMatrixFromBlender() :
     for cam in bpy.context.scene.objects :
         if cam.type != 'CAMERA' :
             continue
+        print(cam.name)
         K, R, T = Get3x4PMatrixFromBlender(cam)
         for i in range(3) :
             for j in range(3) :
