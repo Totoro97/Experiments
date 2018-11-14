@@ -77,10 +77,18 @@ double Map2d::MinDist2Edge(Eigen::Vector3d pt) const {
   X.block(0, 0, 3, 1) = pt;
   X(3, 0) = 1.0;
   auto pix = P * X;
-  int i = static_cast<int>(pix(0, 1));
-  int j = static_cast<int>(pix(0, 0));
-  if (i < 0 || i >= height_ || j < 0 || j >= width_) {
+  double i_d = pix(0, 1);
+  double j_d = pix(0, 0);
+  if (i_d < 1e-8 || i_d > height_ - (1.0 + 1e-8) || j_d < 1e-8 || j_d > width_ - (1.0 + 1e-8)) {
     return 1e7;
-  }
-  return map2d_[i * width_ + j];
+  } 
+  int i = static_cast<int>(i_d);
+  int j = static_cast<int>(j_d);
+  double res_i = i_d - i;
+  double res_j = j_d - j;
+  double dis = (map2d_[i * width_ + j] * (2.0 - res_i - res_j) +
+                map2d_[i * width_ + j + 1] * (1.0 - res_i + res_j) +
+                map2d_[(i + 1) * width_ + j] * (res_i + 1.0 - res_j) +
+                map2d_[(i + 1) * width_ + j + 1] * (res_i + res_j)) / 4.0;
+  return dis;
 }
