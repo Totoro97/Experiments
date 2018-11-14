@@ -50,6 +50,7 @@
         "cwctype": "cpp",
         "*.ipp": "cpp",
         "list": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "xiosbase": "cpp"
     }
 }

@@ -7,6 +7,10 @@
 #include <queue>
 #include <set>
 
+Map2D::~Map2D() {
+  delete(map2d_);
+}
+
 Map2D::Map2D(const cv::mat& img) {
   height_ = img.rows;
   width_ = img.cols;
@@ -64,6 +68,19 @@ Map2D::Map2D(const cv::mat& img) {
   }
 }
 
-Map2D::~Map2D() {
-  delete(map2d_);
+double Map2d::MinDist2Edge(Eigen::Vector3d pt) const {
+  Eigen::Matrix<3, 4, double> P;
+  P.block(0, 0, 3, 3) = R_;
+  P.block(0, 3, 3, 1) = T_;
+  P = K_ * P;
+  Eigen::Matrix<4, 1, double> X;
+  X.block(0, 0, 3, 1) = pt;
+  X(3, 0) = 1.0;
+  auto pix = P * X;
+  int i = static_cast<int>(pix(0, 1));
+  int j = static_cast<int>(pix(0, 0));
+  if (i < 0 || i >= height_ || j < 0 || j >= width_) {
+    return 1e7;
+  }
+  return map2d_[i * width_ + j];
 }
