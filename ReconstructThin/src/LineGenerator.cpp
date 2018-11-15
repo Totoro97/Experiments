@@ -58,6 +58,7 @@ void LineGenerator::AddImgs(std::string file_path, L3DPP::Line3D *line_3D) {
     );
   }
 }
+
 void LineGenerator::GenerateLine() {
   line_3D_ = new L3DPP::Line3D(
     std::string("."),
