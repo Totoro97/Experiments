@@ -14,6 +14,11 @@ LINK_DIRECTORIES(${THIRDPARTY_DIR}/Line3Dpp/build)
 # openCV
 FIND_PACKAGE(OpenCV REQUIRED COMPONENTS core imgproc highgui imgcodecs)
 
-ADD_EXECUTABLE(GenLine3D src/GenLine3D.cpp)
+SET(SOURCE_FILES src/Bend.h src/Bend.cpp src/Curve3d.h src/Curve3d.cpp)
+SET(SOURCE_FILES ${SOURCE_FILES} src/LineGenerator.h src/LineGenerator.cpp src/Main.cpp)
+SET(SOURCE_FILES ${SOURCE_FILES} src/Map2D.h src/Map2D.cpp)
+
+ADD_EXECUTABLE(main ${SOURCE_FILES})
+
 TARGET_LINK_LIBRARIES(GenLine3D line3Dpp boost_system boost_chrono)
 TARGET_LINK_LIBRARIES(GenLine3D ${OpenCV_LIBS})
