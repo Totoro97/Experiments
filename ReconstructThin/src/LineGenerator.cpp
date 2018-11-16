@@ -74,12 +74,17 @@ void LineGenerator::GenerateLine() {
 }
 
 
-void LineGenerator::GetSegment3D(std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> >* segments) {
+void LineGenerator::GetSegment3D(
+    std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> >* segments) {
+  std::cout << "GetSegment3D: Begin" << std::endl;
   std::vector<L3DPP::FinalLine3D> result;
   line_3D_ -> get3Dlines(result);
+  std::cout << "get3Dlines: End" << std::endl;
+  std::cout << "result's size = " << result.size() << std::endl;
   for (const L3DPP::FinalLine3D &line : result) {
     auto segment = line.underlyingCluster_.seg3D();
     segments->push_back(std::make_pair(segment.P1(), segment.P2()));
   }
+  std::cout << "GetSegment3D:: End" << std::endl;
   return;
 }

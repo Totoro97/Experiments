@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#include <iostream>
 #include <queue>
 #include <set>
 
@@ -18,6 +19,7 @@ Map2D::Map2D(const cv::Mat& img) {
   map2d_ = new double[height_ * width_];
   std::fill_n(map2d_, height_ * width_, 1e9);
   ed::ED tmp;
+  std::cout << "DetectEdges: Begin" << std::endl;
   auto edges = tmp.detectEdges(img);
 
   auto dis_cmp = [this](std::pair<int, int> a, std::pair<int, int> b) {
@@ -30,6 +32,7 @@ Map2D::Map2D(const cv::Mat& img) {
     return (a.first * this->width_ + a.second < b.first * this->width_ + b.second);
   };
 
+  std::cout << "PreCalcDistMap: Begin" << std::endl;
   std::set<std::pair<int, int>, decltype(dis_cmp)> que(dis_cmp);
   for (const auto &edge : edges) {
     for (const auto &pix : edge) {
@@ -40,17 +43,17 @@ Map2D::Map2D(const cv::Mat& img) {
 
   // dist map
   std::vector<std::pair<int, int> > biases;
-  const int lim = 50;
+  const int lim = 1;
   std::function<int(int, int)> gcd = [&gcd](int a, int b) {
     return b ? gcd(b, a % b) : a;
   };
-  for (int i = -lim; i < lim; i++)
-    for (int j = -lim; j < lim; j++) {
-      if (gcd(std::abs(i), std::abs(j)) == 1) {
+  for (int i = -lim; i <= lim; i++)
+    for (int j = -lim; j <= lim; j++) {
+      if (gcd(std::abs(i), std::abs(j)) == 1 && abs(i) + abs(j) <= 1) {
         biases.push_back(std::make_pair(i, j));
       }
     }
-  
+  std::cout << "biased size = " << biases.size() << std::endl;
   while (!que.empty()) {
     auto pix = *que.begin();
     que.erase(que.begin());
@@ -70,6 +73,7 @@ Map2D::Map2D(const cv::Mat& img) {
       que.insert(std::make_pair(r, c));
     }
   }
+  std::cout << "PreCalcDistMap: End" << std::endl;
 }
 
 double Map2D::MinDist2Edge(Eigen::Vector3d pt) const {
@@ -81,7 +85,7 @@ double Map2D::MinDist2Edge(Eigen::Vector3d pt) const {
   X.block(0, 0, 3, 1) = pt;
   X(3, 0) = 1.0;
   auto pix = P * X;
-  double i_d = pix(0, 1);
+  double i_d = pix(1, 0);
   double j_d = pix(0, 0);
   if (i_d < 1e-8 || i_d > height_ - (1.0 + 1e-8) || j_d < 1e-8 || j_d > width_ - (1.0 + 1e-8)) {
     return 1e7;
