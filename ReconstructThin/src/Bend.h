@@ -1,5 +1,6 @@
+#pragma once
 #include "LineGenerator.h"
-#include "Map2d.h"
+#include "Map2D.h"
 #include "Curve3d.h"
 
 // Eigen
@@ -10,12 +11,12 @@
 
 class Bend {
 public:
-  Bend(LineGenerator *line_generator, const std::vector<Map2d *> &map2ds): line_generator_(line_generator),
+  Bend(LineGenerator *line_generator, std::vector<Map2D *> *map2ds): line_generator_(line_generator),
       map2ds_(map2ds) {}
   void GoBendNow();
 
   LineGenerator *line_generator_;
-  std::vector<Map2D *> map2ds_;
+  std::vector<Map2D *> *map2ds_;
   
   std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> >* lines_;
   std::vector<Curve3d> curves_;

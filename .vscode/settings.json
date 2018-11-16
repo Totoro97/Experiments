@@ -51,6 +51,15 @@
         "*.ipp": "cpp",
         "list": "cpp",
         "vector": "cpp",
-        "xiosbase": "cpp"
-    }
+        "xiosbase": "cpp",
+        "eigen": "cpp",
+        "bitset": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "optional": "cpp",
+        "numeric": "cpp",
+        "cinttypes": "cpp",
+        "typeindex": "cpp"
+    },
+    "cquery.cacheDirectory": "${workspaceFolder}/.vscode/cquery_cached_index/"
 }

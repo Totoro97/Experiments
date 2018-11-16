@@ -1,3 +1,4 @@
+#pragma once
 // Eigen
 #include <eigen3/Eigen/Eigen>
 // std

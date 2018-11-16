@@ -1,3 +1,4 @@
+#pragma once
 #include <line3D.h>
 // Eigen
 #include <eigen3/Eigen/Eigen>
@@ -20,10 +21,11 @@ public:
 
   void AddImgs(std::string file_path, L3DPP::Line3D *line_3D);
   void GenerateLine();
-  void GetLine3D(std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> >* lines);
+  void GetSegment3D(std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d> >* segments);
 
   std::vector<Eigen::Matrix3d> Ks_, Rs_;
   std::vector<Eigen::Vector3d> Ts_;
   L3DPP::Line3D *line_3D_;
   int cam_num_;
+  std::string work_path_;
 };

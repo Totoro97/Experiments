@@ -11,23 +11,23 @@
 #include <vector>
 #include <list>
 // self
-#include "LineGenerator.cpp"
-#include "Map2d.cpp"
-#include "Bend.cpp"
+#include "LineGenerator.h"
+#include "Map2D.h"
+#include "Bend.h"
 
 int main() {
-  line_generator = new LineGenerator("../data", 64);
+  auto line_generator = new LineGenerator("../data", 64);
   line_generator -> GenerateLine();
 
-  std::vector<Map2d *> map2ds;
+  std::vector<Map2D *> map2ds;
   for (int i = 0; i < 64; i++) {
     auto img_path = std::string("../data/") + std::to_string(i) + std::string(".png");
     cv::Mat img = cv::imread(img_path);
-    auto tmp_ptr = new Map2d(img);
+    auto tmp_ptr = new Map2D(img);
     map2ds.push_back(tmp_ptr);
   }
 
-  bend = new Bend(line_generator, map2ds);
+  auto bend = new Bend(line_generator, &map2ds);
   bend -> GoBendNow();
   return 0;
 }

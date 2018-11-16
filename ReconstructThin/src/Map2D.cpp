@@ -1,9 +1,10 @@
 #include "Map2D.h"
-
+// edge draw
+#include <ed.hpp>
 // std
 #include <algorithm>
 #include <cmath>
-#include <pair>
+#include <functional>
 #include <queue>
 #include <set>
 
@@ -11,25 +12,25 @@ Map2D::~Map2D() {
   delete(map2d_);
 }
 
-Map2D::Map2D(const cv::mat& img) {
+Map2D::Map2D(const cv::Mat& img) {
   height_ = img.rows;
   width_ = img.cols;
   map2d_ = new double[height_ * width_];
   std::fill_n(map2d_, height_ * width_, 1e9);
-  ed::Ed ed;
-  auto edges = ed.detectEdges(img);
+  ed::ED tmp;
+  auto edges = tmp.detectEdges(img);
 
-  auto dis_cmp = [map2d_, width_](std::pair<int, int> a, std::pair<int, int> b) {
-    double dist_a = map2d_[a.first * width_ + a.second];
-    double dist_b = map2d_[b.first * width_ + b.second];
+  auto dis_cmp = [this](std::pair<int, int> a, std::pair<int, int> b) {
+    double dist_a = map2d_[a.first * this->width_ + a.second];
+    double dist_b = map2d_[b.first * this->width_ + b.second];
     if (dist_a < dist_b - 1e-8)
       return true;
     if (dist_a > dist_b + 1e-8)
       return false;
-    return (a.first * width_ + a.second < b.first * width_ + b.second);
+    return (a.first * this->width_ + a.second < b.first * this->width_ + b.second);
   };
 
-  std::set<double, dis_cmp> que;
+  std::set<std::pair<int, int>, decltype(dis_cmp)> que(dis_cmp);
   for (const auto &edge : edges) {
     for (const auto &pix : edge) {
       map2d_[pix.y * width_ + pix.x] = 0;
@@ -40,9 +41,12 @@ Map2D::Map2D(const cv::mat& img) {
   // dist map
   std::vector<std::pair<int, int> > biases;
   const int lim = 50;
+  std::function<int(int, int)> gcd = [&gcd](int a, int b) {
+    return b ? gcd(b, a % b) : a;
+  };
   for (int i = -lim; i < lim; i++)
     for (int j = -lim; j < lim; j++) {
-      if (__gcd(std::abs(i), std::abs(j)) == 1) {
+      if (gcd(std::abs(i), std::abs(j)) == 1) {
         biases.push_back(std::make_pair(i, j));
       }
     }
@@ -68,12 +72,12 @@ Map2D::Map2D(const cv::mat& img) {
   }
 }
 
-double Map2d::MinDist2Edge(Eigen::Vector3d pt) const {
-  Eigen::Matrix<3, 4, double> P;
+double Map2D::MinDist2Edge(Eigen::Vector3d pt) const {
+  Eigen::Matrix<double, 3, 4> P;
   P.block(0, 0, 3, 3) = R_;
   P.block(0, 3, 3, 1) = T_;
   P = K_ * P;
-  Eigen::Matrix<4, 1, double> X;
+  Eigen::Matrix<double, 4, 1> X;
   X.block(0, 0, 3, 1) = pt;
   X(3, 0) = 1.0;
   auto pix = P * X;
