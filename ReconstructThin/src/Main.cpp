@@ -15,6 +15,31 @@
 #include "Map2D.h"
 #include "Bend.h"
 
+void OutPutCurve(Bend *bend) {
+  std::string save_path = std::string("curves.json");
+  FILE *f = fopen(save_path.c_str(), "w");
+  fprintf(f, "{\n \"curves\": [");
+  for (auto curve = bend->curves_.begin(); curve != bend->curves_.end(); curve++) {
+    fprintf(f, "[");
+    for (auto pt = curve->points_.begin(); pt != curve->points_.end(); pt++) {
+      fprintf(f, "[");
+      fprintf(f, "%.4lf, %.4lf, %.4lf", (*pt)(0), (*pt)(1), (*pt)(2));
+      fprintf(f, "]");
+      if (pt != std::prev(curve->points_.end())) {
+        fprintf(f, ", ");
+      }
+    }
+    if (curve == std::prev(bend->curves_.end())) {
+      fprintf(f, "]]\n");
+    }
+    else {
+      fprintf(f, "],\n");
+    }
+  }
+  fprintf(f, "}\n");
+  fclose(f);
+}
+
 int main() {
   std::cout << "Gen3DLine: Begin" << std::endl;
   auto line_generator = new LineGenerator("../data", 64);
@@ -34,5 +59,7 @@ int main() {
 
   auto bend = new Bend(line_generator, &map2ds);
   bend -> GoBendNow();
+
+  OutPutCurve(bend);
   return 0;
 }
