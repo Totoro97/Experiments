@@ -1,9 +1,12 @@
-#include "Tedra.h"
+#include "Tetra.h"
 
 // std
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 #include <set>
+
+Tetra::Tetra() {}
 
 Tetra::Tetra(Eigen::Vector3d pt0, Eigen::Vector3d pt1, Eigen::Vector3d pt2, Eigen::Vector3d pt3, 
              bool calc_sphere) {
@@ -26,58 +29,63 @@ Tetra::Tetra(Eigen::Vector3d* points, bool calc_sphere) {
 }
 
 void Tetra::CalcSphere() {
-  Matrix4f matrix_a;
+  auto vec1 = (points_[1] - points_[0]).cross(points_[2] - points_[0]);
+  auto vec2 = (points_[1] - points_[0]).cross(points_[3] - points_[0]);
+  if (std::abs(vec1.cross(vec2).norm()) < 1e-3) {
+    return;
+  }
+  Eigen::Matrix4d matrix_a;
   matrix_a << points_[0](0), points_[0](1), points_[0][2], 1.0,
               points_[1](0), points_[1](1), points_[1][2], 1.0,
               points_[2](0), points_[2](1), points_[2][2], 1.0,
-              points_[3](0), points_[3](1), points_[3][2], 1.0,
+              points_[3](0), points_[3](1), points_[3][2], 1.0;
   double a = matrix_a.determinant();
-  
+
   auto square_sum = [](double a, double b, double c){
     return a * a + b * b + c * c;
   };
   
-  Matrix4f matrix_dx;
-  matrix_dx << sqaure_sum(points_[0](0), points_[0](1), points_[0](2)),
+  Eigen::Matrix4d matrix_dx;
+  matrix_dx << square_sum(points_[0](0), points_[0](1), points_[0](2)),
                   points_[0](1), points_[0](2), 1.0,
-               sqaure_sum(points_[1](0), points_[1](1), points_[1](2)),
+               square_sum(points_[1](0), points_[1](1), points_[1](2)),
                   points_[1](1), points_[1](2), 1.0,
-               sqaure_sum(points_[2](0), points_[2](1), points_[2](2)),
+               square_sum(points_[2](0), points_[2](1), points_[2](2)),
                   points_[2](1), points_[2](2), 1.0,
-               sqaure_sum(points_[3](0), points_[3](1), points_[3](2)),
-                  points_[3](1), points_[3](2), 1.0,
+               square_sum(points_[3](0), points_[3](1), points_[3](2)),
+                  points_[3](1), points_[3](2), 1.0;
   double dx = matrix_dx.determinant();
 
-  Matrix4f matrix_dy;
-  matrix_dy << sqaure_sum(points_[0](0), points_[0](1), points_[0](2)),
+  Eigen::Matrix4d matrix_dy;
+  matrix_dy << square_sum(points_[0](0), points_[0](1), points_[0](2)),
                   points_[0](0), points_[0](2), 1.0,
-               sqaure_sum(points_[1](0), points_[1](1), points_[1](2)),
+               square_sum(points_[1](0), points_[1](1), points_[1](2)),
                   points_[1](0), points_[1](2), 1.0,
-               sqaure_sum(points_[2](0), points_[2](1), points_[2](2)),
+               square_sum(points_[2](0), points_[2](1), points_[2](2)),
                   points_[2](0), points_[2](2), 1.0,
-               sqaure_sum(points_[3](0), points_[3](1), points_[3](2)),
-                  points_[3](0), points_[3](2), 1.0,
+               square_sum(points_[3](0), points_[3](1), points_[3](2)),
+                  points_[3](0), points_[3](2), 1.0;
   double dy = -matrix_dy.determinant();
 
-  Matrix4f matrix_dz;
-  matrix_dy << sqaure_sum(points_[0](0), points_[0](1), points_[0](2)),
+  Eigen::Matrix4d matrix_dz;
+  matrix_dz << square_sum(points_[0](0), points_[0](1), points_[0](2)),
                   points_[0](0), points_[0](1), 1.0,
-               sqaure_sum(points_[1](0), points_[1](1), points_[1](2)),
+               square_sum(points_[1](0), points_[1](1), points_[1](2)),
                   points_[1](0), points_[1](1), 1.0,
-               sqaure_sum(points_[2](0), points_[2](1), points_[2](2)),
+               square_sum(points_[2](0), points_[2](1), points_[2](2)),
                   points_[2](0), points_[2](1), 1.0,
-               sqaure_sum(points_[3](0), points_[3](1), points_[3](2)),
-                  points_[3](0), points_[3](1), 1.0,
+               square_sum(points_[3](0), points_[3](1), points_[3](2)),
+                  points_[3](0), points_[3](1), 1.0;
   double dz = matrix_dz.determinant();
 
   sphere_center_ = Eigen::Vector3d(dx, dy, dz) * 0.5 / a;
-  sphere_radius = (sphere_center_ - points_[0]).norm();
-  double bias = sphere_radius - (sphere_center - points_[1]).norm();
+  sphere_radius_ = (sphere_center_ - points_[0]).norm();
+  double bias = sphere_radius_ - (sphere_center_ - points_[1]).norm();
   assert(std::abs(bias) < 1e-3);
   return;
 }
 
-bool Tetra::InSphere(Eigen Vector3d pt) {
+bool Tetra::InSphere(Eigen::Vector3d pt) {
   return ((pt - sphere_center_).norm() < sphere_radius_  - 1e-5);
 };
 
@@ -86,19 +94,19 @@ void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<
   Eigen::Vector3d lim_min( inf,  inf,  inf);
   Eigen::Vector3d lim_max(-inf, -inf, -inf);
   for (const auto &pt : points) {
-    lim_min = Vector3d(
+    lim_min = Eigen::Vector3d(
       std::min(lim_min(0), pt(0)),
       std::min(lim_min(1), pt(1)),
       std::min(lim_min(2), pt(2))
     );
-    lim_max = Vector3d(
+    lim_max = Eigen::Vector3d(
       std::max(lim_max(0), pt(0)),
       std::max(lim_max(1), pt(1)),
       std::max(lim_max(2), pt(2))
-    )
+    );
   }
-  lim_min -= Vector3d(10.0, 10.0, 10.0);
-  lim_max += Vector3d(10.0, 10.0, 10.0);
+  lim_min -= Eigen::Vector3d(10.0, 10.0, 10.0);
+  lim_max += Eigen::Vector3d(10.0, 10.0, 10.0);
 
   Eigen::Vector3d vec_x(lim_max(0) - lim_min(0), 0.0, 0.0);
   Eigen::Vector3d vec_y(0.0, lim_max(1) - lim_min(1), 0.0);
@@ -110,7 +118,7 @@ void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<
   std::list<Tetra> tetra_list;
   tetra_list.emplace_back(lim_min, lim_min + vec_x, lim_min + vec_y, lim_min + vec_z, true);
   for (const auto &pt : points) {
-    auto cmp = [](const Trian &a, const Tiran &b){
+    auto cmp = [](const Trian &a, const Trian &b){
       for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
           if (std::abs(a.points_[i](j) - b.points_[i](j)) > 1e-5) {
@@ -129,9 +137,9 @@ void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<
             for (int k = j + 1; k < 4; k++) {
               Trian trian(iter->points_[i], iter->points_[j], iter->points_[k]);
               if (trians.find(trian) != trians.end()) {
-                trians.erase(*trian);
+                trians.erase(trian);
               } else {
-                trians.insert(*trian);
+                trians.insert(trian);
               }
             }
         iter = tetra_list.erase(iter);
@@ -141,12 +149,12 @@ void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<
     }
     
     for (const auto &trian : trians) {
-      tetra_list.emplate_back(trian.points_[0], trian.points_[1], trian.points_[2], pt, true);
+      tetra_list.emplace_back(trian.points_[0], trian.points_[1], trian.points_[2], pt, true);
     }
   }
 
   // erase super tetra.
-  for (auto iter = tetra_list.begin(); iter != tetra_list.end()) {
+  for (auto iter = tetra_list.begin(); iter != tetra_list.end(); ) {
     bool exceed = false;
     for (int i = 0; i < 4 && !exceed; i++) {
       for (int j = 0; j < 3; j++) {
