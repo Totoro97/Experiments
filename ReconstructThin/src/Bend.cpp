@@ -14,16 +14,16 @@ void Bend::GoBendNow() {
 
   for (auto &curve : curves_) {
     double past_cost = 1e15;
-    for (int iter_num = 100; iter_num > 0; iter_num--) {
+    for (int iter_num = 50; iter_num > 0; iter_num--) {
       std::cout << "Now iter: " << iter_num << std::endl;
       for (auto &pt : curve.points_) {
         double current_dis = 0.0;
-        std::cout << "pt = " << pt << std::endl;
+        //std::cout << "pt = " << pt << std::endl;
         for (const auto &map2d : *map2ds_) {
           double single_dis = map2d->MinDist2Edge(pt);
           current_dis += single_dis;
         }
-        std::cout << "current_dis = " << current_dis << std::endl;
+        //std::cout << "current_dis = " << current_dis << std::endl;
         if (current_dis > 1e7) {
           continue;
         }
@@ -38,7 +38,7 @@ void Bend::GoBendNow() {
             double single_dis = map2d->MinDist2Edge(pt + bias);
             new_dis += single_dis;  
           }
-          std::cout << "new_dis = " << new_dis << std::endl;
+          //std::cout << "new_dis = " << new_dis << std::endl;
           if (new_dis > 1e7) {
             valid = false;
             break;
@@ -49,8 +49,8 @@ void Bend::GoBendNow() {
           continue;
         }
         const double step_ratio = 1e-6;
-        std::cout << "grad = " << grad << std::endl;
-        pt = pt + grad * step_ratio;
+        //std::cout << "grad = " << grad << std::endl;
+        pt = pt - grad * step_ratio;
       }
     }
   }

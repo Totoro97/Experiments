@@ -55,7 +55,7 @@ int main() {
   for (int i = 0; i < 64; i++) {
     auto img_path = std::string("../data/") + std::to_string(i) + std::string(".png");
     cv::Mat img = cv::imread(img_path);
-    auto tmp_ptr = new Map2D(img, true, "./map2d_" + std::to_string(i) + ".bin");
+    auto tmp_ptr = new Map2D(img, false, "./map2d_" + std::to_string(i) + ".bin");
     tmp_ptr->SetKRT(Ks[i], Rs[i], Ts[i]);
     //std::cout << tmp_ptr->K_ << std::endl;
     //std::cout << tmp_ptr->R_ << std::endl;
