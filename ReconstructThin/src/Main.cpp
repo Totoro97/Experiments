@@ -14,6 +14,7 @@
 #include "LineGenerator.h"
 #include "Map2D.h"
 #include "Bend.h"
+#include "Utils.h"
 
 void OutPutCurve(Bend *bend) {
   std::string save_path = std::string("curves.json");
@@ -48,17 +49,25 @@ int main() {
   std::cout << "-----------------Gen3DLine: End-----------------" << std::endl;
   std::cout << "-----------------Gen2DMap: Begin----------------" << std::endl;
   std::vector<Map2D *> map2ds;
+  std::vector<Eigen::Matrix3d> Ks, Rs;
+  std::vector<Eigen::Vector3d> Ts;
+  Utils::ReadKRTFromFile(std::string("../data/Cameras.txt"), 64, &Ks, &Rs, &Ts);
   for (int i = 0; i < 64; i++) {
     auto img_path = std::string("../data/") + std::to_string(i) + std::string(".png");
     cv::Mat img = cv::imread(img_path);
-    auto tmp_ptr = new Map2D(img);
+    auto tmp_ptr = new Map2D(img, true, "./map2d_" + std::to_string(i) + ".bin");
+    tmp_ptr->SetKRT(Ks[i], Rs[i], Ts[i]);
+    //std::cout << tmp_ptr->K_ << std::endl;
+    //std::cout << tmp_ptr->R_ << std::endl;
+    //std::cout << tmp_ptr->T_ << std::endl;
+    //exit(0);
     map2ds.push_back(tmp_ptr);
   }
 
   std::cout << "-----------------Gen2DMap: End------------------" << std::endl;
 
   auto bend = new Bend(line_generator, &map2ds);
-  bend -> GoBendNow();
+  bend->GoBendNow();
 
   OutPutCurve(bend);
   return 0;

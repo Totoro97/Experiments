@@ -13,10 +13,19 @@ Map2D::~Map2D() {
   delete(map2d_);
 }
 
-Map2D::Map2D(const cv::Mat& img) {
+Map2D::Map2D(const cv::Mat& img, bool calc_distmap, std::string distmap_path) {
   height_ = img.rows;
   width_ = img.cols;
   map2d_ = new double[height_ * width_];
+  if (calc_distmap) {
+    CalcDistmap(img, distmap_path);
+  }
+  else {
+    LoadDistmap(distmap_path);
+  }
+}
+
+void Map2D::CalcDistmap(const cv::Mat& img, std::string distmap_path) {
   std::fill_n(map2d_, height_ * width_, 1e9);
   ed::ED tmp;
   std::cout << "DetectEdges: Begin" << std::endl;
@@ -43,13 +52,13 @@ Map2D::Map2D(const cv::Mat& img) {
 
   // dist map
   std::vector<std::pair<int, int> > biases;
-  const int lim = 1;
+  const int lim = 5;
   std::function<int(int, int)> gcd = [&gcd](int a, int b) {
     return b ? gcd(b, a % b) : a;
   };
   for (int i = -lim; i <= lim; i++)
     for (int j = -lim; j <= lim; j++) {
-      if (gcd(std::abs(i), std::abs(j)) == 1 && abs(i) + abs(j) <= 1) {
+      if (gcd(std::abs(i), std::abs(j)) == 1) {
         biases.push_back(std::make_pair(i, j));
       }
     }
@@ -73,7 +82,20 @@ Map2D::Map2D(const cv::Mat& img) {
       que.insert(std::make_pair(r, c));
     }
   }
+
+  // write file
+  std::ofstream tmp_file;
+  tmp_file.open(distmap_path.c_str(), std::ios::binary | std::ios::ate);
+  tmp_file.write((const char *) map2d_, width_ * height_ * sizeof(double));
+  tmp_file.close();
   std::cout << "PreCalcDistMap: End" << std::endl;
+}
+
+void Map2D::LoadDistmap(std::string distmap_path) {
+  std::ifstream map_stream(distmap_path.c_str(), std::ios::binary | std::ios::ate);
+  map_stream.seekg(0, std::ios::beg);
+  map_stream.read((char *)(map2d_), width_ * height_ * sizeof(double));
+  map_stream.close();
 }
 
 double Map2D::MinDist2Edge(Eigen::Vector3d pt) const {
@@ -85,11 +107,25 @@ double Map2D::MinDist2Edge(Eigen::Vector3d pt) const {
   X.block(0, 0, 3, 1) = pt;
   X(3, 0) = 1.0;
   auto pix = P * X;
-  double i_d = pix(1, 0);
-  double j_d = pix(0, 0);
+  double i_d = pix(1, 0) / pix(2, 0);
+  double j_d = pix(0, 0) / pix(2, 0);
+  //std::cout << "pt = " << pt(0) << " " << pt(1) << " " << pt(2) << std::endl;
+  if (std::abs(pt(0)) > 100 || std::abs(pt(1)) > 100 || std::abs(pt(2)) > 100) {
+    exit(0);
+  }
+  //std::cout << "pt = " << pt << std::endl;
+  //std::cout << "i = " << i_d << " j = " << j_d << std::endl;
+  //std::cout << "pix = " << pix << std::endl;
+  double res = 0.0;
+  res += std::max(0.0, 1e-8 - i_d);
+  res += std::max(0.0, i_d - (height_ - (1.0 + 1e-8)));
+  res += std::max(0.0, 1e-8 - j_d);
+  res += std::max(0.0, j_d - (width_ - (1.0 + 1e-8)));
+  i_d = std::max(1e-8, std::min(i_d, height_ - (1.0 + 1e-8)));
+  j_d = std::max(1e-8, std::min(j_d, width_ - (1.0 + 1e-8)));
   if (i_d < 1e-8 || i_d > height_ - (1.0 + 1e-8) || j_d < 1e-8 || j_d > width_ - (1.0 + 1e-8)) {
     return 1e7;
-  } 
+  }
   int i = static_cast<int>(i_d);
   int j = static_cast<int>(j_d);
   double res_i = i_d - i;
@@ -98,5 +134,11 @@ double Map2D::MinDist2Edge(Eigen::Vector3d pt) const {
                 map2d_[i * width_ + j + 1] * (1.0 - res_i + res_j) +
                 map2d_[(i + 1) * width_ + j] * (res_i + 1.0 - res_j) +
                 map2d_[(i + 1) * width_ + j + 1] * (res_i + res_j)) / 4.0;
-  return dis;
+  return dis + res;
+}
+
+void Map2D::SetKRT(Eigen::Matrix3d K, Eigen::Matrix3d R, Eigen::Vector3d T) {
+  K_ = K;
+  R_ = R;
+  T_ = T;
 }

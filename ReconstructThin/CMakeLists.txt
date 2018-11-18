@@ -21,6 +21,7 @@ FIND_PACKAGE(OpenCV REQUIRED COMPONENTS core imgproc highgui imgcodecs)
 SET(SOURCE_FILES src/Bend.h src/Bend.cpp src/Curve3d.h src/Curve3d.cpp)
 SET(SOURCE_FILES ${SOURCE_FILES} src/LineGenerator.h src/LineGenerator.cpp src/Main.cpp)
 SET(SOURCE_FILES ${SOURCE_FILES} src/Map2D.h src/Map2D.cpp)
+SET(SOURCE_FILES ${SOURCE_FILES} src/Utils.h src/Utils.cpp)
 
 ADD_EXECUTABLE(main ${SOURCE_FILES})
 
