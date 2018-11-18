@@ -32,3 +32,5 @@ TARGET_LINK_LIBRARIES(main ${OpenCV_LIBS})
 ADD_EXECUTABLE(gen src/GenLine3D.cpp)
 TARGET_LINK_LIBRARIES(gen line3Dpp boost_system boost_chrono)
 TARGET_LINK_LIBRARIES(gen ${OpenCV_LIBS})
+
+ADD_EXECUTABLE(test_trtra TestTetra.cpp Tetra.cpp Tetra.h)
