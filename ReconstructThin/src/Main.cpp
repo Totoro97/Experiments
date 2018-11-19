@@ -83,6 +83,16 @@ int main() {
   std::cout << "tetras size ! " << tetras->size() << std::endl;
   std::vector<Trian> trians;
   for (const auto tetra : *tetras) {
+    double s = 0;
+    for (int i = 0; i < 4; i++)
+      for (int j = i + 1; j < 4; j++) {
+        s += (tetra.points_[i] - tetra.points_[j]).norm();
+      }
+    double score = tetra.sphere_radius_ / (s / 4.0);
+    std::cout << "score = " << score << std::endl;
+    if (score > 1.0) {
+      continue;
+    }
     for (int i = 0; i < 4; i++)
       for (int j = i + 1; j < 4; j++)
         for (int k = j + 1; k < 4; k++) {
