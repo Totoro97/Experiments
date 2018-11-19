@@ -22,7 +22,7 @@ class Trian {
 public:
   Eigen::Vector3d points_[3];
 
-  Trian(Eigen::Vector3d pt0, Eigen::Vector3d pt1, Eigen::Vector3d pt2);
+  Trian(Eigen::Vector3d pt0, Eigen::Vector3d pt1, Eigen::Vector3d pt2, bool want_to_sort = true);
 };
 
 void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<Tetra> *tetras);

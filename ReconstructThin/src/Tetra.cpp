@@ -175,10 +175,13 @@ void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<
 }
 
 
-Trian::Trian(Eigen::Vector3d pt0, Eigen::Vector3d pt1, Eigen::Vector3d pt2) {
+Trian::Trian(Eigen::Vector3d pt0, Eigen::Vector3d pt1, Eigen::Vector3d pt2, bool want_to_sort) {
   points_[0] = pt0;
   points_[1] = pt1;
   points_[2] = pt2;
+  if (!want_to_sort) {
+    return;
+  }
   auto cmp = [](const Eigen::Vector3d &a, const Eigen::Vector3d &b) {
     for (int i = 0; i < 3; i++) {
       if (std::abs(a(i) - b(i)) > 1e-5) {

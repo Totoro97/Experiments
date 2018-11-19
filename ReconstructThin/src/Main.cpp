@@ -84,19 +84,27 @@ int main() {
   std::vector<Trian> trians;
   for (const auto tetra : *tetras) {
     double s = 0;
-    for (int i = 0; i < 4; i++)
-      for (int j = i + 1; j < 4; j++) {
-        s += (tetra.points_[i] - tetra.points_[j]).norm();
-      }
-    double score = tetra.sphere_radius_ / (s / 4.0);
-    std::cout << "score = " << score << std::endl;
-    if (score > 1.0) {
+    auto pt = tetra.sphere_center_;
+    for (auto &map2d : map2ds) {
+      s += map2d->MinDist2Edge(pt);
+    }
+    if (s > 1500) {
       continue;
     }
     for (int i = 0; i < 4; i++)
       for (int j = i + 1; j < 4; j++)
         for (int k = j + 1; k < 4; k++) {
-          trians.emplace_back(tetra.points_[i], tetra.points_[j], tetra.points_[k]);
+          auto vec =
+            (tetra.points_[j] - tetra.points_[i]).cross(tetra.points_[k] - tetra.points_[i]);
+          int p = 0;
+          while (p == i || p == j || p == k)
+            p++;
+          if (vec.prod(tetra.points_[p] - tetra.points_[i]) > 0.0) {
+            trians.emplace_back(tetra.points_[i], tetra.points_[k], tetra.points_[j], false);
+          }
+          else {
+            trians.emplace_back(tetra.points_[i], tetra.points_[j], tetra.points_[k], false);
+          }
         }
   }
   Utils::SaveTriansAsPly(std::string("./mesh.ply"), trians);
