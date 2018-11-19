@@ -1,6 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(thin)
 SET(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-O2")
 SET(THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/../ThirdParty)
 
 # Eigen
@@ -22,6 +23,7 @@ SET(SOURCE_FILES src/Bend.h src/Bend.cpp src/Curve3d.h src/Curve3d.cpp)
 SET(SOURCE_FILES ${SOURCE_FILES} src/LineGenerator.h src/LineGenerator.cpp src/Main.cpp)
 SET(SOURCE_FILES ${SOURCE_FILES} src/Map2D.h src/Map2D.cpp)
 SET(SOURCE_FILES ${SOURCE_FILES} src/Utils.h src/Utils.cpp)
+SET(SOURCE_FILES ${SOURCE_FILES} src/Tetra.h src/Tetra.cpp)
 
 ADD_EXECUTABLE(main ${SOURCE_FILES})
 
@@ -33,4 +35,4 @@ ADD_EXECUTABLE(gen src/GenLine3D.cpp)
 TARGET_LINK_LIBRARIES(gen line3Dpp boost_system boost_chrono)
 TARGET_LINK_LIBRARIES(gen ${OpenCV_LIBS})
 
-ADD_EXECUTABLE(test_trtra src/TestTetra.cpp src/Tetra.cpp src/Tetra.h)
+ADD_EXECUTABLE(test_tetra src/TestTetra.cpp src/Utils.cpp src/Utils.h src/Tetra.cpp src/Tetra.h)

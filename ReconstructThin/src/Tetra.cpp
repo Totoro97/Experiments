@@ -29,11 +29,6 @@ Tetra::Tetra(Eigen::Vector3d* points, bool calc_sphere) {
 }
 
 void Tetra::CalcSphere() {
-  auto vec1 = (points_[1] - points_[0]).cross(points_[2] - points_[0]);
-  auto vec2 = (points_[1] - points_[0]).cross(points_[3] - points_[0]);
-  if (std::abs(vec1.cross(vec2).norm()) < 1e-3) {
-    return;
-  }
   Eigen::Matrix4d matrix_a;
   matrix_a << points_[0](0), points_[0](1), points_[0][2], 1.0,
               points_[1](0), points_[1](1), points_[1][2], 1.0,
@@ -87,7 +82,7 @@ void Tetra::CalcSphere() {
 
 bool Tetra::InSphere(Eigen::Vector3d pt) {
   return ((pt - sphere_center_).norm() < sphere_radius_  - 1e-5);
-};
+}
 
 void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<Tetra> *tetras) {
   const double inf = 1e7;
@@ -117,7 +112,9 @@ void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<
   
   std::list<Tetra> tetra_list;
   tetra_list.emplace_back(lim_min, lim_min + vec_x, lim_min + vec_y, lim_min + vec_z, true);
+  int cnt = 0;
   for (const auto &pt : points) {
+    std::cout << "cnt = " << cnt++ << std::endl;
     auto cmp = [](const Trian &a, const Trian &b){
       for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -151,6 +148,8 @@ void Tetrahedralization(const std::vector<Eigen::Vector3d>& points, std::vector<
     for (const auto &trian : trians) {
       tetra_list.emplace_back(trian.points_[0], trian.points_[1], trian.points_[2], pt, true);
     }
+
+    std::cout << "tetra_num: " << tetra_list.size() << std::endl;
   }
 
   // erase super tetra.

@@ -72,23 +72,24 @@ int main() {
   std::cout << "------------------Bend: End---------------------" << std::endl;
   std::cout << "------------------Tetra: Begin------------------" << std::endl;
   std::vector<Eigen::Vector3d> points;
-  for (const auto &curve : bend->curves_) :
-    for (const auto &pt : bend->points_) {
+  for (const auto &curve : bend->curves_) {
+    for (const auto &pt : curve.points_) {
       points.push_back(pt);
     }
+  }
   std::cout << "Point size: " << points.size() << std::endl;
   auto tetras = new std::vector<Tetra>();
   Tetrahedralization(points, tetras);
+  std::cout << "tetras size ! " << tetras->size() << std::endl;
   std::vector<Trian> trians;
-  for (const auto tetra : tetras) {
+  for (const auto tetra : *tetras) {
     for (int i = 0; i < 4; i++)
       for (int j = i + 1; j < 4; j++)
-        for (int k = k +1; k < 4; k++) {
+        for (int k = j + 1; k < 4; k++) {
           trians.emplace_back(tetra.points_[i], tetra.points_[j], tetra.points_[k]);
-          return 0;
         }
   }
-  Utils::SaveTriansAsPly(trians);
+  Utils::SaveTriansAsPly(std::string("./mesh.ply"), trians);
   std::cout << "------------------Tetra: End--------------------" << std::endl; 
   return 0;
 }

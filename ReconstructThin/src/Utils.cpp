@@ -4,6 +4,7 @@
 // std
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include <map>
 
 void Utils::ReadKRTFromFile(std::string file_path, int cam_num,
@@ -68,8 +69,10 @@ void Utils::SaveTriansAsPly(std::string save_path, const std::vector<Trian> &tri
   my_file << "element vertex " << mp.size() << "\n";
   my_file << "property float32 x\nproperty float32 y\nproperty float32 z\n";
   my_file << "element face " << trians.size() << "\n";
-  for (iter = mp.begin(); iter != mp.end(); iter++) {
-    my_file << (iter->first).transpose() << "\n";
+  my_file << "property list uint8 int32 vertex_indices\n";
+  my_file << "end_header\n";
+  for (auto iter = mp.begin(); iter != mp.end(); iter++) {
+    my_file << (iter->first)(0) << " " << (iter->first)(1) << " " << (iter->first)(2) << "\n";
   }
   for (const auto &trian : trians) {
     my_file << "3 ";
