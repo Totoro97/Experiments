@@ -99,7 +99,7 @@ int main() {
           int p = 0;
           while (p == i || p == j || p == k)
             p++;
-          if (vec.prod(tetra.points_[p] - tetra.points_[i]) > 0.0) {
+          if (vec.dot(tetra.points_[p] - tetra.points_[i]) > 0.0) {
             trians.emplace_back(tetra.points_[i], tetra.points_[k], tetra.points_[j], false);
           }
           else {
