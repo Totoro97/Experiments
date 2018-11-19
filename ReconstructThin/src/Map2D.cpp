@@ -110,9 +110,9 @@ double Map2D::MinDist2Edge(Eigen::Vector3d pt) const {
   double i_d = pix(1, 0) / pix(2, 0);
   double j_d = pix(0, 0) / pix(2, 0);
   //std::cout << "pt = " << pt(0) << " " << pt(1) << " " << pt(2) << std::endl;
-  if (std::abs(pt(0)) > 100 || std::abs(pt(1)) > 100 || std::abs(pt(2)) > 100) {
-    exit(0);
-  }
+  //if (std::abs(pt(0)) > 100 || std::abs(pt(1)) > 100 || std::abs(pt(2)) > 100) {
+  //  exit(0);
+  //}
   //std::cout << "pt = " << pt << std::endl;
   //std::cout << "i = " << i_d << " j = " << j_d << std::endl;
   //std::cout << "pix = " << pix << std::endl;
@@ -123,9 +123,6 @@ double Map2D::MinDist2Edge(Eigen::Vector3d pt) const {
   res += std::max(0.0, j_d - (width_ - (1.0 + 1e-8)));
   i_d = std::max(1e-8, std::min(i_d, height_ - (1.0 + 1e-8)));
   j_d = std::max(1e-8, std::min(j_d, width_ - (1.0 + 1e-8)));
-  if (i_d < 1e-8 || i_d > height_ - (1.0 + 1e-8) || j_d < 1e-8 || j_d > width_ - (1.0 + 1e-8)) {
-    return 1e7;
-  }
   int i = static_cast<int>(i_d);
   int j = static_cast<int>(j_d);
   double res_i = i_d - i;
