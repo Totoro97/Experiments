@@ -3,6 +3,8 @@
 #include <eigen3/Eigen/Eigen>
 // std
 #include <algorithm>
+#include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -86,4 +88,17 @@ void Utils::SaveTriansAsPly(std::string save_path, const std::vector<Trian> &tri
     }
   }
   my_file.close();
+}
+
+
+void Utils::Srand() {
+  srand(123);
+}
+
+double Utils::Random() {
+  return static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
+}
+
+double Utils::RandomLR(double l, double r) {
+  return l + Random() * (r - l);
 }
