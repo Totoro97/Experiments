@@ -102,3 +102,19 @@ double Utils::Random() {
 double Utils::RandomLR(double l, double r) {
   return l + Random() * (r - l);
 }
+
+
+void Utils::SavePoints(std::string save_path, const std::vector<Eigen::Vector3d> &points) {
+  std::ofstream my_file;
+  my_file.open(save_path.c_str());
+  my_file << "{\n\"points\": [";
+  for (auto pt = points.begin(); pt != points.end(); pt++) {
+    my_file << "[" << (*pt)(0) << "," << (*pt)(1) << "," << (*pt)(2) << "]";
+    if (std::next(pt) == points.end()) {
+      my_file << "]\n";
+    } else {
+      my_file << ",\n";
+    }
+  }
+  my_file << "}\n";
+}

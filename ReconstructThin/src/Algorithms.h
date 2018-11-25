@@ -12,7 +12,7 @@ namespace Algo {
 
 //void SuitWithTube(const cv::Mat &img, std::vector<Tube> &tubes, int num_tube);
 
-void SuitWithPointCloud(std::vector<DistriMap> &distri_maps,
+void SuitWithPointCloud(std::vector<DistriMap *> &distri_maps,
                         std::vector<Eigen::Vector3d> &points,
                         int num_point,
                         int num_ter = 100,

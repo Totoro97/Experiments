@@ -34,7 +34,7 @@ void Algo::SuitWithTube(const cv::Mat &img, std::vector<Tube> &tubes, int num_tu
   return;
 }*/
 
-void Algo::SuitWithPointCloud(std::vector<DistriMap> &distri_maps,
+void Algo::SuitWithPointCloud(std::vector<DistriMap *> &distri_maps,
                               std::vector<Eigen::Vector3d> &points,
                               int num_point,
                               int num_iter,
@@ -43,31 +43,39 @@ void Algo::SuitWithPointCloud(std::vector<DistriMap> &distri_maps,
   points.clear();
   const double pi = std::acos(-1.0);
   for (; num_point > 0; num_point--) {
+    std::cout << "-----------------------new point, res: "
+              << num_point << " --------------------" << std::endl;
     Eigen::Vector3d pt(Utils::RandomLR(-init_range, init_range),
                        Utils::RandomLR(-init_range, init_range),
                        Utils::RandomLR(-init_range, init_range));
     for (auto &distri_map : distri_maps) {
-      distri_map.AddPoint(pt);
+      distri_map->AddPoint(pt);
     }
+    double step_length = 1.0;
     for (int iter_cnt = 0; iter_cnt < num_iter; iter_cnt++) {
+      // std::cout << pt.transpose() << std::endl;
       double alpha = Utils::RandomLR(-pi, pi);
       double beta = Utils::RandomLR(-pi * 0.5, pi * 0.5);
       Eigen::Vector3d vec(std::cos(alpha) * std::cos(beta),
                           std::sin(alpha) * std::cos(beta),
                           std::sin(beta));
+      vec *= step_length;
+      step_length *= 0.995;
+      // std::cout << "step_length = " << step_length << std::endl;
       auto new_pt = pt + vec;
       double past_cost = 0, new_cost = 0;
       for (auto &distri_map : distri_maps) {
-        past_cost += distri_map.CalcCost();
-        distri_map.ChangePoint(pt, new_pt);
-        new_cost += distri_map.CalcCost();
+        past_cost += distri_map->CalcCost();
+        distri_map->ChangePoint(pt, new_pt);
+        new_cost += distri_map->CalcCost();
       }
 
+      // std::cout << "past: " << past_cost << " new: " << new_cost << std::endl;
       if (new_cost < past_cost) {
         pt = new_pt;
       } else {
         for (auto &distri_map : distri_maps) {
-          distri_map.ChangePoint(new_pt, pt);
+          distri_map->ChangePoint(new_pt, pt);
         }
       }
     }

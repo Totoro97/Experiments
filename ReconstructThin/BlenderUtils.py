@@ -1,6 +1,7 @@
 from bpy import context, data, ops
 import random, os
 import math
+import json
 from mathutils import Matrix, Vector
 
 def RandFloat(L, R) :
@@ -289,5 +290,14 @@ def GetCameraMatrixFromBlender() :
     f.write(text)
     f.close()
 
-GenerateCurveImagesWithManyCameras(64)
-GetCameraMatrixFromBlender()
+def GeneratePointCloud() :
+    file_path = '/home/totoro/CG/ReproduceThem/ReconstructThin/Testing/points.json'
+    f = open(file_path, 'r')
+    points = json.loads(f.read())['points']
+    f.close()
+    for pt in points :
+        ops.mesh.primitive_cube_add(location = tuple(pt), enter_editmode = True)
+        ops.transform.resize(value=(0.01, 0.01, 0.01))
+
+ClearAllObjects()
+GeneratePointCloud()

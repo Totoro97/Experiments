@@ -15,7 +15,7 @@ void ReadKRTFromFile(std::string file_path, int cam_num,
                      std::vector<Eigen::Vector3d> *Ts);
 
 void SaveTriansAsPly(std::string save_path, const std::vector<Trian> &trians);
-
+void SavePoints(std::string save_path, const std::vector<Eigen::Vector3d> &points);
 void Srand();
 double Random();
 double RandomLR(double l, double r);
