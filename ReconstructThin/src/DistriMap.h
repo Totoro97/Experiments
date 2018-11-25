@@ -1,6 +1,6 @@
 #pragma once
 #include "Headers.h"
-#include <stirng>
+#include <string>
 
 class DistriMap {
 public:
@@ -11,11 +11,12 @@ public:
   void ChangePoint(Eigen::Vector3d past_pt, Eigen::Vector3d new_pt);
   double CalcCost();
   void CalcSumDistri();
-  void CalcDistriMap(std::string map_path);
+  void CalcDistriMap(const cv::Mat &img, std::string map_path);
   void LoadDistriMap(std::string map_path);
-  void SetKRT(Eigen::Matrix3d K, Eigen::Matrix3d R, Eigen::Vector3d T)
-  Eigen::Vector2d Map3to2(Eigen::Vector3d pt) const;
-
+  void SetKRT(Eigen::Matrix3d K, Eigen::Matrix3d R, Eigen::Vector3d T);
+  bool IsInside(const cv::Mat &img, int i, int j);
+  Eigen::Vector2d Map3to2(Eigen::Vector3d pt);
+  
   int height_;
   int width_;
   int num_point_ = 0;

@@ -66,7 +66,7 @@ void Algo::SuitWithPointCloud(std::vector<DistriMap> &distri_maps,
       if (new_cost < past_cost) {
         pt = new_pt;
       } else {
-        for (auto &distr_map : distri_maps) {
+        for (auto &distri_map : distri_maps) {
           distri_map.ChangePoint(new_pt, pt);
         }
       }

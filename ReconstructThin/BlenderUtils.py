@@ -1,6 +1,8 @@
 from bpy import context, data, ops
 import random, os
 import math
+from mathutils import Matrix, Vector
+
 def RandFloat(L, R) :
     return L + random.random() * (R - L)
     
@@ -20,7 +22,7 @@ def GenerateLights() :
             location = position
         )
         
-def GenerateRandomCurve() :
+def GenerateRandomCurve(curve_name = 'MyCurve') :
     # Create a bezier circle and enter edit mode.
     if random.randint(0, 1) == 1 :
         ops.curve.primitive_bezier_curve_add(radius=random.random(),
@@ -44,8 +46,8 @@ def GenerateRandomCurve() :
     ops.transform.resize(
         value = (RandFloat(0.5, 3.0), RandFloat(0.5, 3.0), RandFloat(0.5, 3.0))
     )
-    ops.transform.translate(
-        value = (RandFloat(-4.0, 4.0), RandFloat(-4.0, 4.0), RandFloat(-4.0, 4.0)))
+    #ops.transform.translate(
+    #    value = (RandFloat(-4.0, 4.0), RandFloat(-4.0, 4.0), RandFloat(-4.0, 4.0)))
     ops.transform.rotate(
         value = RandFloat(0, math.pi),
         axis = (RandFloat(-1.0, 1.0), RandFloat(-1.0, 1.0), RandFloat(-1.0, 1.0))
@@ -54,8 +56,8 @@ def GenerateRandomCurve() :
     ops.object.mode_set(mode='OBJECT')
 
     # Store a shortcut to the curve object's data.
+    context.active_object.name = context.active_object.data.name = curve_name
     obj_data = context.active_object.data
-
     # Which parts of the curve to extrude ['HALF', 'FRONT', 'BACK', 'FULL'].
     obj_data.fill_mode = 'FULL'
 
@@ -66,7 +68,7 @@ def GenerateRandomCurve() :
     obj_data.resolution_u = 20
     obj_data.render_resolution_u = 32
 
-    ops.curve.primitive_bezier_circle_add(radius=random.random() * 0.03 + 0.01, enter_editmode=True)
+    ops.curve.primitive_bezier_circle_add(radius=random.random() * 0.03 + 0.02, enter_editmode=True)
     ops.curve.subdivide(number_cuts=4)
     bevel_control = context.active_object
     bevel_control.data.name = bevel_control.name = 'Bevel Control'
@@ -91,19 +93,15 @@ def GenerateRandomCurve() :
 def ClearAllObjects() :
     ops.object.select_all(action='DESELECT')
     for obj in data.objects :
-        if obj.name == 'Camera' :
-            continue
         obj.select = True
     ops.object.delete()
 
-def GenerateRenderResult(img_name = 'tmp') :
+def GenerateRenderResult(camera_name = 'camera', img_name = 'tmp') :
     context.scene.render.engine = 'CYCLES'
     context.scene.cycles.film_transparent = True
     for obj in data.objects:
-        if obj.type == 'CAMERA':
+        if obj.type == 'CAMERA' and obj.name == camera_name:
             context.scene.camera = obj
-            cam_name = obj.name
-            cam_id = 0
             print('Set camera %s' % obj.name)
             file_name = '/home/totoro/tmp/' + img_name
             context.scene.render.filepath = file_name
@@ -115,7 +113,181 @@ def GenerateManyCurveImages(num_img) :
         ClearAllObjects()
         GenerateRandomCurve()
         GenerateLights()
-        GenerateRenderResult(('%.' + str(l) + 'd') % _)
+        GenerateRenderResult('camera', ('%.' + str(l) + 'd') % _)
 
-def 
-GenerateManyCurveImages(500)
+def GenerateCameras(num_camera) :
+    n = int(math.sqrt(num_camera))
+    for i in range(n) :
+        for j in range(n) :
+            a = 2.0 * math.pi / n * i
+            b = math.pi * (-0.4) + math.pi * 0.8 / n * j
+            x = 10 * math.cos(a) * math.cos(b)
+            y = 10 * math.sin(a) * math.cos(b)
+            z = 10 * math.sin(b)
+            ops.object.camera_add(
+                view_align=True,
+                enter_editmode=False,
+                location=(x, y, z)
+            )
+            context.active_object.name = 'Camera.' + str(i * n + j)
+            context.active_object.data.name = 'Camera.' + str(i * n + j)
+            
+
+def MakeCamerasLookAt(curve_name = 'MyCurve') :
+    for ob in context.scene.objects :
+        if ob.type != 'CAMERA' :
+            continue
+        context.scene.objects.active = ob
+        ops.object.constraint_add(type='TRACK_TO')
+        context.object.constraints["Track To"].target = data.objects[curve_name]
+        context.object.constraints["Track To"].track_axis = 'TRACK_NEGATIVE_Z'
+        context.object.constraints["Track To"].up_axis = 'UP_Y'
+        
+def GenerateCurveImagesWithManyCameras(num_camera) :
+    ClearAllObjects()
+    GenerateRandomCurve('MyCurve')
+    GenerateCameras(num_camera)
+    MakeCamerasLookAt('MyCurve')
+    GenerateLights()
+    for ob in context.scene.objects :
+        if ob.type != 'CAMERA' :
+            continue
+        GenerateRenderResult(ob.name, ob.name[7:])
+
+#---------------------------------------------------------------------------------------------------
+# 3x4 P matrix from Blender camera
+# Reference: https://blender.stackexchange.com/questions/38009/3x4-camera-matrix-from-blender-camera
+#---------------------------------------------------------------------------------------------------
+
+# BKE_camera_sensor_size
+def GetSenserSize(sensor_fit, sensor_x, sensor_y):
+    if sensor_fit == 'VERTICAL':
+        return sensor_y
+    return sensor_x
+
+# BKE_camera_sensor_fit
+def GetSensorFit(sensor_fit, size_x, size_y):
+    if sensor_fit == 'AUTO':
+        if size_x >= size_y:
+            return 'HORIZONTAL'
+        else:
+            return 'VERTICAL'
+    return sensor_fit
+
+# Build intrinsic camera parameters from Blender camera data
+#
+# See notes on this in 
+# blender.stackexchange.com/questions/15102/what-is-blenders-camera-projection-matrix-model
+# as well as
+# https://blender.stackexchange.com/a/120063/3581
+def GetCalibrationMatrixKFromBlender(camd):
+    if camd.type != 'PERSP':
+        raise ValueError('Non-perspective cameras not supported')
+    scene = context.scene
+    f_in_mm = camd.lens
+    scale = scene.render.resolution_percentage / 100
+    resolution_x_in_px = scale * scene.render.resolution_x
+    resolution_y_in_px = scale * scene.render.resolution_y
+    sensor_size_in_mm = GetSenserSize(camd.sensor_fit, camd.sensor_width, camd.sensor_height)
+    sensor_fit = GetSensorFit(
+        camd.sensor_fit,
+        scene.render.pixel_aspect_x * resolution_x_in_px,
+        scene.render.pixel_aspect_y * resolution_y_in_px
+    )
+    pixel_aspect_ratio = scene.render.pixel_aspect_y / scene.render.pixel_aspect_x
+    if sensor_fit == 'HORIZONTAL':
+        view_fac_in_px = resolution_x_in_px
+    else:
+        view_fac_in_px = pixel_aspect_ratio * resolution_y_in_px
+    pixel_size_mm_per_px = sensor_size_in_mm / f_in_mm / view_fac_in_px
+    s_u = 1 / pixel_size_mm_per_px
+    s_v = 1 / pixel_size_mm_per_px / pixel_aspect_ratio
+
+    # Parameters of intrinsic calibration matrix K
+    u_0 = resolution_x_in_px / 2 - camd.shift_x * view_fac_in_px
+    v_0 = resolution_y_in_px / 2 + camd.shift_y * view_fac_in_px / pixel_aspect_ratio
+    skew = 0 # only use rectangular pixels
+
+    K = Matrix(
+        ((s_u, skew, u_0),
+        (   0,  s_v, v_0),
+        (   0,    0,   1)))
+    return K
+
+# Returns camera rotation and translation matrices from Blender.
+# 
+# There are 3 coordinate systems involved:
+#    1. The World coordinates: "world"
+#       - right-handed
+#    2. The Blender camera coordinates: "bcam"
+#       - x is horizontal
+#       - y is up
+#       - right-handed: negative z look-at direction
+#    3. The desired computer vision camera coordinates: "cv"
+#       - x is horizontal
+#       - y is down (to align to the actual pixel coordinates 
+#         used in digital images)
+#       - right-handed: positive z look-at direction
+
+def Get3x4RTMatrixFromBlender(cam):
+    # bcam stands for blender camera
+    R_bcam2cv = Matrix(
+        ((1, 0,  0),
+        (0, -1, 0),
+        (0, 0, -1)))
+
+    # Transpose since the rotation is object rotation, 
+    # and we want coordinate rotation
+    # R_world2bcam = cam.rotation_euler.to_matrix().transposed()
+    # T_world2bcam = -1*R_world2bcam * location
+    #
+    # Use matrix_world instead to account for all constraints
+    location, rotation = cam.matrix_world.decompose()[0:2]
+    print('location = ' + str(location))
+    R_world2bcam = rotation.to_matrix().transposed()
+
+    # Convert camera location to translation vector used in coordinate changes
+    # T_world2bcam = -1*R_world2bcam*cam.location
+    # Use location from matrix_world to account for constraints:     
+    T_world2bcam = -1*R_world2bcam * location
+    print('T_world2bcam = ' + str(T_world2bcam))
+    # Build the coordinate transform matrix from world to computer vision camera
+    R_world2cv = R_bcam2cv*R_world2bcam
+    T_world2cv = R_bcam2cv*T_world2bcam
+
+    # put into 3x4 matrix
+    RT = Matrix((
+        R_world2cv[0][:] + (T_world2cv[0],),
+        R_world2cv[1][:] + (T_world2cv[1],),
+        R_world2cv[2][:] + (T_world2cv[2],)
+        ))
+    return R_world2cv, T_world2cv, RT
+
+def Get3x4PMatrixFromBlender(cam):
+    K = GetCalibrationMatrixKFromBlender(cam.data)
+    R, T, RT = Get3x4RTMatrixFromBlender(cam)
+    return K, R, T
+
+def GetCameraMatrixFromBlender() :
+    f = open('/home/totoro/tmp/Cameras.txt', 'w')
+    text = ''
+    for cam in context.scene.objects :
+        if cam.type != 'CAMERA' :
+            continue
+        print(cam.name)
+        K, R, T = Get3x4PMatrixFromBlender(cam)
+        for i in range(3) :
+            for j in range(3) :
+                text += str(K[i][j]) + ' '
+            text += '\n'
+        for i in range(3) :
+            for j in range(3) :
+                text += str(R[i][j]) + ' '
+            text += '\n'
+        for i in range(3) :
+            text += str(T[i]) + '\n'
+    f.write(text)
+    f.close()
+
+GenerateCurveImagesWithManyCameras(64)
+GetCameraMatrixFromBlender()
