@@ -297,7 +297,7 @@ def GeneratePointCloud() :
     f.close()
     for pt in points :
         ops.mesh.primitive_cube_add(location = tuple(pt), enter_editmode = True)
-        ops.transform.resize(value=(0.01, 0.01, 0.01))
+        ops.transform.resize(value=(0.002, 0.002, 0.002))
 
 ClearAllObjects()
 GeneratePointCloud()

@@ -9,6 +9,7 @@ public:
   void AddPoint(Eigen::Vector3d pt);
   void DeletePoint(Eigen::Vector3d pt);
   void ChangePoint(Eigen::Vector3d past_pt, Eigen::Vector3d new_pt);
+  double IsBetterChangePoint(Eigen::Vector3d past_pt, Eigen::Vector3d new_pt);
   double CalcCost();
   void CalcSumDistri();
   void CalcDistriMap(const cv::Mat &img, std::string map_path);

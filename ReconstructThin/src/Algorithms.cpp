@@ -51,7 +51,7 @@ void Algo::SuitWithPointCloud(std::vector<DistriMap *> &distri_maps,
     for (auto &distri_map : distri_maps) {
       distri_map->AddPoint(pt);
     }
-    double step_length = 1.0;
+    double step_length = 2.0;
     for (int iter_cnt = 0; iter_cnt < num_iter; iter_cnt++) {
       // std::cout << pt.transpose() << std::endl;
       double alpha = Utils::RandomLR(-pi, pi);
@@ -63,20 +63,17 @@ void Algo::SuitWithPointCloud(std::vector<DistriMap *> &distri_maps,
       step_length *= 0.995;
       // std::cout << "step_length = " << step_length << std::endl;
       auto new_pt = pt + vec;
-      double past_cost = 0, new_cost = 0;
+      double inc_cost = 0.0;
       for (auto &distri_map : distri_maps) {
-        past_cost += distri_map->CalcCost();
-        distri_map->ChangePoint(pt, new_pt);
-        new_cost += distri_map->CalcCost();
+        inc_cost += distri_map->IsBetterChangePoint(pt, new_pt);
       }
-
-      // std::cout << "past: " << past_cost << " new: " << new_cost << std::endl;
-      if (new_cost < past_cost) {
-        pt = new_pt;
-      } else {
+      
+      // std::cout << "inc cost: " << inc_cost << std::endl;
+      if (inc_cost < 0.0) {
         for (auto &distri_map : distri_maps) {
-          distri_map->ChangePoint(new_pt, pt);
+          distri_map->ChangePoint(pt, new_pt);
         }
+        pt = new_pt;
       }
     }
     points.push_back(pt);

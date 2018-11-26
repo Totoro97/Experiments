@@ -1,6 +1,4 @@
 #include "Utils.h"
-// Eigen
-#include <eigen3/Eigen/Eigen>
 // std
 #include <algorithm>
 #include <chrono>
@@ -117,4 +115,23 @@ void Utils::SavePoints(std::string save_path, const std::vector<Eigen::Vector3d>
     }
   }
   my_file << "}\n";
+}
+
+void Utils::SaveGrayScaleImageFromPtr(double *pt,
+                                      int width,
+                                      int height,
+                                      std::string file_path) {
+  double val_min = 1e9;
+  double val_max = -1e9;
+  for (int i = 0; i < width * height; i++) {
+    val_min = std::min(val_min, pt[i]);
+    val_max = std::max(val_max, pt[i]);
+  }
+  uint8_t *tmp_ptr = new uint8_t[width * height];
+  for (int i = 0; i < width * height; i++) {
+    tmp_ptr[i] = static_cast<uint8_t>((pt[i] - val_min) / (val_max - val_min) * 255.0);
+  }
+  cv::Mat tmp_mat(cv::Size(width, height), CV_8UC1, (void *) tmp_ptr);
+  cv::imwrite(file_path.c_str(), tmp_mat);
+  delete(tmp_ptr);
 }

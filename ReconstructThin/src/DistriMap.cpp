@@ -27,7 +27,7 @@ DistriMap::~DistriMap() {
 
 void DistriMap::AddPoint(Eigen::Vector3d pt) {
   // We should guarantee no point is outside the image.
-  if (num_point_ > 0) {
+  /*if (num_point_ > 0) {
     for (int i = 0; i < width_ * height_; i++) {
       current_cost_ -=
         std::abs(
@@ -35,11 +35,15 @@ void DistriMap::AddPoint(Eigen::Vector3d pt) {
           distri_map_[i] / sum_distri_
         );
     }
-  }
+  }*/
   num_point_++;
   auto mapped = Map3to2(pt);
   int a = static_cast<int>(std::round(mapped(0)));
   int b = static_cast<int>(std::round(mapped(1)));
+  if (a >= 0 && a < height_ && b >= 0 && b < width_) {
+    point_map_[a * width_ + b]++;
+  }
+  /*
   if (a < 0 || a >= height_ || b < 0 || b >= width_) {
     current_cost_ += static_cast<double>(
       std::max(0, std::max(0 - a, a - height_)) + std::max(0, std::max(0 - b, b - width_)));
@@ -53,6 +57,8 @@ void DistriMap::AddPoint(Eigen::Vector3d pt) {
         distri_map_[i] / sum_distri_
       );
   }
+  */
+  // std::cout << "coooooost: " << current_cost_ << std::endl;
 }
 
 /*void DistriMap::DeletePoint(Eigen::Vector3d pt) {
@@ -87,36 +93,84 @@ void DistriMap::ChangePoint(Eigen::Vector3d past_pt, Eigen::Vector3d pt) {
     return;
   }
   if (a1 >= 0 && a1 < height_ && b1 >= 0 && b1 < width_) {
-    current_cost_ -= std::abs(
+    /*current_cost_ -= std::abs(
       static_cast<double>(point_map_[a1 * width_ + b1]) / static_cast<double>(num_point_) -
       distri_map_[a1 * width_ + b1] / sum_distri_
-    );
+    );*/
     point_map_[a1 * width_ + b1]--;
-    current_cost_ += std::abs(
+    /*current_cost_ += std::abs(
       static_cast<double>(point_map_[a1 * width_ + b1]) / static_cast<double>(num_point_) -
       distri_map_[a1 * width_ + b1] / sum_distri_
-    );
+    );*/
   }
-  else {
+  /*else {
     current_cost_ -= static_cast<double>(
       std::max(0, std::max(0 - a1, a1 - height_)) + std::max(0, std::max(0 - b1, b1 - width_)));
-  }
+  }*/
 
   if (a2 >= 0 && a2 < height_ && b2 >= 0 && b2 < width_) {
-    current_cost_ -= std::abs(
+    /*current_cost_ -= std::abs(
       static_cast<double>(point_map_[a2 * width_ + b2]) / static_cast<double>(num_point_) -
       distri_map_[a2 * width_ + b2] / sum_distri_
-    );
+    );*/
     point_map_[a2 * width_ + b2]++;
-    current_cost_ += std::abs(
+    /*current_cost_ += std::abs(
       static_cast<double>(point_map_[a2 * width_ + b2]) / static_cast<double>(num_point_) -
       distri_map_[a2 * width_ + b2] / sum_distri_
-    );
-  } else {
+    );*/
+  } /*else {
     current_cost_ += static_cast<double>(
       std::max(0, std::max(0 - a2, a2 - height_)) + std::max(0, std::max(0 - b2, b2 - width_)));
-  }
+  }*/
   return;
+}
+
+double DistriMap::IsBetterChangePoint(Eigen::Vector3d past_pt, Eigen::Vector3d pt) {
+  auto mapped1 = Map3to2(past_pt);
+  int a1 = static_cast<int>(std::round(mapped1(0)));
+  int b1 = static_cast<int>(std::round(mapped1(1)));  
+  auto mapped2 = Map3to2(pt);
+  int a2 = static_cast<int>(std::round(mapped2(0)));
+  int b2 = static_cast<int>(std::round(mapped2(1)));
+  //std::cout << "a1 = " << a1 << " b1 = " << b1 << " a2 = " << a2 << " b2 = " << b2 << std::endl;
+  if (a1 == a2 && b1 == b2) {
+    return 0.0;
+  }
+  auto ExpectedDistri = [this](int a, int b) {
+    if (a >= 0 && a < height_ && b >= 0 && b < width_) {
+      return distri_map_[a * width_ + b];
+    } else {
+      double distance = static_cast<double>(std::max(0, std::max(0 - a, a - height_ + 1)) +
+           std::max(0, std::max(0 - b, b - width_ + 1)));
+      return distance * 1e8;
+    }
+  };
+  
+  auto NumPoint = [this](int a, int b, int k, bool is_new) {
+    if (a >= 0 && a < height_ && b >= 0 && b < width_) {
+      return static_cast<double>(point_map_[a * width_ + b] + k);
+    } else if (k == 0) {
+      if (is_new)
+        return 0.0;
+      else
+        return 1.0;
+    } else {
+      if (is_new)
+        return 1.0;
+      else
+        return 0.0;
+    }
+  };
+  double e1 = ExpectedDistri(a1, b1);
+  double e2 = ExpectedDistri(a2, b2);
+  double past_cost = std::abs(e1 * NumPoint(a1, b1, 0, false) - e2 * NumPoint(a2, b2, 0, true));
+  double new_cost = std::abs(e1 * NumPoint(a1, b1, -1, false) - e2 * NumPoint(a2, b2, 1, true));
+  //std::cout << "past_cost = " << past_cost << " new_cost = " << new_cost << std::endl;
+  if (a1 >= 0 && a1 < height_ && b1 >= 0 && b1 < width_ &&
+      a2 >= 0 && a2 < height_ && b2 >= 0 && b2 < width_) {
+    //std::cout << "Oops!!!!!!!!!!!!! " << new_cost - past_cost << std::endl;
+  }
+  return (new_cost - past_cost);
 }
 
 double DistriMap::CalcCost() {
@@ -202,9 +256,9 @@ void DistriMap::CalcDistriMap(const cv::Mat &img, std::string map_path) {
   for (int i = 0; i < height_; i++) {
     for (int j = 0; j < width_; j++) {
       if (IsInside(img, i, j)) {
-        distri_map_[i * width_ + j] = 1.0 / dist_map[i * width_ + j];
+        distri_map_[i * width_ + j] = dist_map[i * width_ + j];
       } else {
-        distri_map_[i * width_ + j] = 1e-4 / dist_map[i * width_ + j]; 
+        distri_map_[i * width_ + j] = 1e4 * dist_map[i * width_ + j]; 
       }
     }
   }

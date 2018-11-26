@@ -18,11 +18,20 @@ int main() {
     auto tmp_ptr = new DistriMap(img, false, std::to_string(i) + std::string(".bin"));
     distri_maps.push_back(tmp_ptr);
     // std::fflush(stdout);
-    distri_maps[i]->SetKRT(Rs[i], Ks[i], Ts[i]);
+    distri_maps[i]->SetKRT(Ks[i], Rs[i], Ts[i]);
   }
   std::cout << "SuitWithPointCloud: Begin" << std::endl;
   std::vector<Eigen::Vector3d> points;
-  Algo::SuitWithPointCloud(distri_maps, points, 100, 1000, 3.0);
+  Algo::SuitWithPointCloud(distri_maps, points, 2000, 1000, 2.0);
   Utils::SavePoints("points.json", points);
+  for (int i = 0; i < 64; i++) {
+  auto distri_ptr = distri_maps[i];
+    Utils::SaveGrayScaleImageFromPtr(
+      distri_ptr->distri_map_,
+      distri_ptr->width_,
+      distri_ptr->height_,
+      std::to_string(i) + std::string("just.png")
+    );
+  }
   return 0;
 }

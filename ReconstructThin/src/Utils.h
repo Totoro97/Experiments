@@ -1,6 +1,5 @@
 #pragma once
-// Eigen
-#include <eigen3/Eigen/Eigen>
+#include "Headers.h"
 // std
 #include <string>
 #include <vector>
@@ -16,6 +15,7 @@ void ReadKRTFromFile(std::string file_path, int cam_num,
 
 void SaveTriansAsPly(std::string save_path, const std::vector<Trian> &trians);
 void SavePoints(std::string save_path, const std::vector<Eigen::Vector3d> &points);
+void SaveGrayScaleImageFromPtr(double *pt, int width, int height, std::string file_path = "");
 void Srand();
 double Random();
 double RandomLR(double l, double r);
