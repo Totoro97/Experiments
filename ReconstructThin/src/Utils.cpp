@@ -47,7 +47,7 @@ void Utils::ReadKRTFromFile(std::string file_path, int cam_num,
 void Utils::SaveTriansAsPly(std::string save_path, const std::vector<Trian> &trians) {
   auto cmp = [](const Eigen::Vector3d &a, const Eigen::Vector3d &b) {
     for (int i = 0; i < 3; i++) {
-      if (std::abs(a(i) - b(i)) > 1e-3) {
+      if (std::abs(a(i) - b(i)) > 1e-6) {
         return (a(i) < b(i));
       }
     }

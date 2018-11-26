@@ -116,22 +116,37 @@ def GenerateManyCurveImages(num_img) :
         GenerateLights()
         GenerateRenderResult('camera', ('%.' + str(l) + 'd') % _)
 
-def GenerateCameras(num_camera) :
-    n = int(math.sqrt(num_camera))
-    for i in range(n) :
-        for j in range(n) :
+def GenerateCameras(num_camera, is_plane = False) :
+    if not is_plane : 
+        n = int(math.sqrt(num_camera))
+        for i in range(n) :
+            for j in range(n) :
+                a = 2.0 * math.pi / n * i
+                b = math.pi * (-0.5) + (math.pi / n * (j + 0.5))
+                x = 10 * math.cos(a) * math.cos(b)
+                y = 10 * math.sin(a) * math.cos(b)
+                z = 10 * math.sin(b)   
+                ops.object.camera_add(
+                    view_align=True,
+                    enter_editmode=False,
+                    location=(x, y, z)
+                )
+                context.active_object.name = 'Camera.' + str(i * n + j)
+                context.active_object.data.name = 'Camera.' + str(i * n + j) 
+    else :
+        n = num_camera
+        for i in range(n) :
             a = 2.0 * math.pi / n * i
-            b = math.pi * (-0.4) + math.pi * 0.8 / n * j
-            x = 10 * math.cos(a) * math.cos(b)
-            y = 10 * math.sin(a) * math.cos(b)
-            z = 10 * math.sin(b)
+            x = 10 * math.cos(a)
+            y = 10 * math.sin(a)
+            z = 0.0
             ops.object.camera_add(
                 view_align=True,
                 enter_editmode=False,
                 location=(x, y, z)
             )
-            context.active_object.name = 'Camera.' + str(i * n + j)
-            context.active_object.data.name = 'Camera.' + str(i * n + j)
+            context.active_object.name = 'Camera.' + str(i)
+            context.active_object.data.name = 'Camera.' + str(i)
             
 
 def MakeCamerasLookAt(curve_name = 'MyCurve') :
@@ -144,10 +159,10 @@ def MakeCamerasLookAt(curve_name = 'MyCurve') :
         context.object.constraints["Track To"].track_axis = 'TRACK_NEGATIVE_Z'
         context.object.constraints["Track To"].up_axis = 'UP_Y'
         
-def GenerateCurveImagesWithManyCameras(num_camera) :
+def GenerateCurveImagesWithManyCameras(num_camera, is_plane = False) :
     ClearAllObjects()
     GenerateRandomCurve('MyCurve')
-    GenerateCameras(num_camera)
+    GenerateCameras(num_camera, is_plane)
     MakeCamerasLookAt('MyCurve')
     GenerateLights()
     for ob in context.scene.objects :
@@ -299,5 +314,5 @@ def GeneratePointCloud() :
         ops.mesh.primitive_cube_add(location = tuple(pt), enter_editmode = True)
         ops.transform.resize(value=(0.002, 0.002, 0.002))
 
-ClearAllObjects()
-GeneratePointCloud()
+GenerateCurveImagesWithManyCameras(16, is_plane=False)
+GetCameraMatrixFromBlender()
