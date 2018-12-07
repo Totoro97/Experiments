@@ -100,13 +100,13 @@ def ClearAllObjects() :
 
 def GenerateRenderResult(camera_name = 'camera', img_name = 'tmp') :
     context.scene.render.engine = 'CYCLES'
-    context.scene.cycles.film_transparent = True
+    context.scene.cycles.film_transparent = False
     for obj in data.objects:
         if obj.type == 'CAMERA' and obj.name == camera_name:
             context.scene.camera = obj
             print('Set camera %s' % obj.name)
-            file_name = '/home/totoro/tmp/' + img_name
-            context.scene.render.filepath = file_name
+            file_name = 'C:/Users/Aska/tmp/' + img_name
+            context.scene.render.filepath = file_name + '.jpg'
             ops.render.render(write_still=True)
 
 def GenerateManyCurveImages(num_img) :
