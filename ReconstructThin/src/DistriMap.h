@@ -4,7 +4,10 @@
 
 class DistriMap {
 public:
-  DistriMap(const cv::Mat &img, bool calc_distri_map = false, std::string map_path = ".");
+  DistriMap(const cv::Mat &img, 
+            std::string distri_func = "recip",
+            bool calc_distri_map = false,
+            std::string map_path = ".");
   ~DistriMap();
   void AddPoint(Eigen::Vector3d pt);
   void DeletePoint(Eigen::Vector3d pt);
@@ -25,6 +28,7 @@ public:
   double *distri_map_;
   double sum_distri_;
   double current_cost_;
+  std::string distri_func_;
   Eigen::Matrix3d K_;
   Eigen::Matrix3d R_;
   Eigen::Vector3d T_;

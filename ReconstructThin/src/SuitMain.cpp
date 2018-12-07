@@ -9,7 +9,7 @@
 int main() {
   std::vector<Eigen::Matrix3d> Ks, Rs;
   std::vector<Eigen::Vector3d> Ts;
-  int num_cam = 5;
+  int num_cam = 16;
   Utils::ReadKRTFromFile(std::string("/home/totoro/tmp/Cameras.txt"), num_cam, &Ks, &Rs, &Ts);
   std::vector<DistriMap *> distri_maps;
   for (int i = 0; i < num_cam; i++) {
@@ -17,7 +17,8 @@ int main() {
       cv::imread(std::string("/home/totoro/tmp/") + std::to_string(i) + std::string(".png"));
     // cv::imshow("img", img);
     // cv::waitKey(100);
-    auto tmp_ptr = new DistriMap(img, true, std::to_string(i) + std::string(".bin"));
+    auto tmp_ptr = new DistriMap(
+      img, std::string("recip"), true, std::to_string(i) + std::string(".bin"));
     distri_maps.push_back(tmp_ptr);
     // std::fflush(stdout);
     distri_maps[i]->SetKRT(Ks[i], Rs[i], Ts[i]);
@@ -28,8 +29,12 @@ int main() {
   Utils::SavePoints("points.json", points);
   for (int i = 0; i < num_cam; i++) {
   auto distri_ptr = distri_maps[i];
+    auto tmp_ptr = new double[distri_ptr->width_ * distri_ptr->height_];
+    for (int j = 0; j < distri_ptr->width_ * distri_ptr->height_; j++) {
+      tmp_ptr[j] = 1.0 / (distri_ptr->distri_map_[j] + 1e-8);
+    }
     Utils::SaveGrayScaleImageFromPtr(
-      distri_ptr->distri_map_,
+      tmp_ptr,
       distri_ptr->width_,
       distri_ptr->height_,
       std::to_string(i) + std::string("just.png")
@@ -67,7 +72,7 @@ int main() {
         is_ok = false;
         break;
       }
-      if (distri_map->distri_map_[a * distri_map->width_ + b] > 1 * 1e4) {
+      if (distri_map->distri_map_[a * distri_map->width_ + b] > 5 * 1e4) {
         is_ok = false;
         break;
       }

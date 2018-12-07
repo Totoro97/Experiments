@@ -69,7 +69,8 @@ def GenerateRandomCurve(curve_name = 'MyCurve') :
     obj_data.resolution_u = 20
     obj_data.render_resolution_u = 32
 
-    ops.curve.primitive_bezier_circle_add(radius=random.random() * 0.03 + 0.02, enter_editmode=True)
+    # ops.curve.primitive_bezier_circle_add(radius=random.random() * 0.03 + 0.02, enter_editmode=True)
+    ops.curve.primitive_bezier_circle_add(radius=0.03, enter_editmode=True)
     ops.curve.subdivide(number_cuts=4)
     bevel_control = context.active_object
     bevel_control.data.name = bevel_control.name = 'Bevel Control'
@@ -279,19 +280,22 @@ def Get3x4RTMatrixFromBlender(cam):
         ))
     return R_world2cv, T_world2cv, RT
 
-def Get3x4PMatrixFromBlender(cam):
+def Get3x4PMatrixFromBlender(cam, add_error = False):
     K = GetCalibrationMatrixKFromBlender(cam.data)
     R, T, RT = Get3x4RTMatrixFromBlender(cam)
+    if add_error :
+        for i in range(3) :
+            T[i] += RandFloat(-0.05, 0.05)
     return K, R, T
 
-def GetCameraMatrixFromBlender() :
+def GetCameraMatrixFromBlender(add_error = False) :
     f = open('/home/totoro/tmp/Cameras.txt', 'w')
     text = ''
     for cam in context.scene.objects :
         if cam.type != 'CAMERA' :
             continue
         print(cam.name)
-        K, R, T = Get3x4PMatrixFromBlender(cam)
+        K, R, T = Get3x4PMatrixFromBlender(cam, add_error)
         for i in range(3) :
             for j in range(3) :
                 text += str(K[i][j]) + ' '
@@ -315,4 +319,4 @@ def GeneratePointCloud() :
         ops.transform.resize(value=(0.002, 0.002, 0.002))
 
 GenerateCurveImagesWithManyCameras(16, is_plane=False)
-GetCameraMatrixFromBlender()
+GetCameraMatrixFromBlender(add_error = True)

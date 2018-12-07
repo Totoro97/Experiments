@@ -43,7 +43,7 @@ void OutPutCurve(Bend *bend) {
 
 int main() {
   std::cout << "Gen3DLine: Begin" << std::endl;
-  auto line_generator = new LineGenerator("/home/totoro/tmp", 64);
+  auto line_generator = new LineGenerator("../data", 64);
   line_generator -> GenerateLine();
 
   std::cout << "-----------------Gen3DLine: End-----------------" << std::endl;
@@ -51,9 +51,9 @@ int main() {
   std::vector<Map2D *> map2ds;
   std::vector<Eigen::Matrix3d> Ks, Rs;
   std::vector<Eigen::Vector3d> Ts;
-  Utils::ReadKRTFromFile(std::string("/home/totoro/tmp/Cameras.txt"), 64, &Ks, &Rs, &Ts);
+  Utils::ReadKRTFromFile(std::string("../data/Cameras.txt"), 64, &Ks, &Rs, &Ts);
   for (int i = 0; i < 64; i++) {
-    auto img_path = std::string("/home/totoro/tmp/") + std::to_string(i) + std::string(".png");
+    auto img_path = std::string("../data/") + std::to_string(i) + std::string(".png");
     cv::Mat img = cv::imread(img_path);
     auto tmp_ptr = new Map2D(img, true, "./map2d_" + std::to_string(i) + ".bin");
     tmp_ptr->SetKRT(Ks[i], Rs[i], Ts[i]);

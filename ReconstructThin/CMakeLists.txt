@@ -27,6 +27,7 @@ SET(SOURCE_FILES ${SOURCE_FILES} src/Tetra.h src/Tetra.cpp)
 SET(SOURCE_FILES ${SOURCE_FILES} src/Headers.h)
 SET(SOURCE_FILES ${SOURCE_FILES} src/DistriMap.h src/DistriMap.cpp)
 SET(SOURCE_FILES ${SOURCE_FILES} src/Algorithms.h src/Algorithms.cpp)
+SET(SOURCE_FILES ${SOURCE_FILES} src/DistMap.h src/DistMap.cpp)
 
 ADD_EXECUTABLE(main src/Main.cpp ${SOURCE_FILES})
 
@@ -44,3 +45,8 @@ ADD_EXECUTABLE(suit_main src/SuitMain.cpp ${SOURCE_FILES})
 TARGET_LINK_LIBRARIES(suit_main ed)
 TARGET_LINK_LIBRARIES(suit_main line3Dpp boost_system boost_chrono)
 TARGET_LINK_LIBRARIES(suit_main ${OpenCV_LIBS})
+
+ADD_EXECUTABLE(rotate_main src/RotateMain.cpp ${SOURCE_FILES})
+TARGET_LINK_LIBRARIES(rotate_main ed)
+TARGET_LINK_LIBRARIES(rotate_main line3Dpp boost_system boost_chrono)
+TARGET_LINK_LIBRARIES(rotate_main ${OpenCV_LIBS})

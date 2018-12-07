@@ -3,10 +3,14 @@
 #include <cstring>
 #include <iostream>
 
-DistriMap::DistriMap(const cv::Mat &img, bool calc_distri_map, std::string map_path) {
+DistriMap::DistriMap(const cv::Mat &img,
+                     std::string distri_func,
+                     bool calc_distri_map,
+                     std::string map_path) {
   std::cout << "DistriMap Reconstruction: Begin" << std::endl;
   height_ = img.rows;
   width_ = img.cols;
+  distri_func_ = distri_func;
   distri_map_ = new double[height_ * width_];
   point_map_ = new int[height_ * width_];
   std::memset(point_map_, 0, height_ * width_ * sizeof(int));
@@ -256,7 +260,12 @@ void DistriMap::CalcDistriMap(const cv::Mat &img, std::string map_path) {
   for (int i = 0; i < height_; i++) {
     for (int j = 0; j < width_; j++) {
       if (IsInside(img, i, j)) {
-        distri_map_[i * width_ + j] = dist_map[i * width_ + j];
+        if (distri_func_ == std::string("recip")) {
+          distri_map_[i * width_ + j] = dist_map[i * width_ + j];
+        }
+        else {
+          distri_map_[i * width_ + j] = 1.0;
+        }
       } else {
         distri_map_[i * width_ + j] = 1e4 * dist_map[i * width_ + j]; 
       }
@@ -308,6 +317,9 @@ Eigen::Vector2d DistriMap::Map3to2(Eigen::Vector3d pt) {
 
 bool DistriMap::IsInside(const cv::Mat &img, int i, int j) {
   uint8_t *img_ptr = (uint8_t*) img.data;
+  return (static_cast<int>(img_ptr[(i * width_ + j) * 3]) != img_ptr[0] ||
+          static_cast<int>(img_ptr[(i * width_ + j) * 3 + 1]) != img_ptr[0] ||
+          static_cast<int>(img_ptr[(i * width_ + j) * 3 + 2]) != img_ptr[0]);
   return (static_cast<int>(img_ptr[(i * width_ + j) * 3]) != 0 ||
           static_cast<int>(img_ptr[(i * width_ + j) * 3 + 1]) != 0 ||
           static_cast<int>(img_ptr[(i * width_ + j) * 3 + 2]) != 0);
