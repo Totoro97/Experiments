@@ -1,4 +1,4 @@
- 
+
 from bpy import context, data, ops
 import random, os
 import math
@@ -7,7 +7,7 @@ from mathutils import Matrix, Vector
 
 def RandFloat(L, R) :
     return L + random.random() * (R - L)
-    
+
 def GenerateLights() :
     n = random.randint(1, 3)
     for _ in range(n) :
@@ -23,26 +23,26 @@ def GenerateLights() :
             view_align = False,
             location = position
         )
-        
+
 def GenerateRandomCurve(curve_name = 'MyCurve') :
     # Create a bezier circle and enter edit mode.
     # if random.randint(0, 1) == 1 :
     ops.curve.primitive_bezier_curve_add(radius=random.random(),
-                                        location=(0.0, 0.0, 0.0),
+                                       location=(0.0, 0.0, 0.0),
                                         enter_editmode=True)
     #else :
-    #    ops.curve.primitive_bezier_circle_add(radius=random.random(),
-    #                                         location=(0.0, 0.0, 0.0),
-    #                                         enter_editmode=True)
+    #ops.curve.primitive_bezier_circle_add(radius=random.random(),
+    #                                     location=(0.0, 0.0, 0.0),
+    #                                     enter_editmode=True)
 
     # Subdivide the curve by a number of cuts, giving the
     # random vertex function more points to work with.
-    # ops.curve.subdivide(number_cuts = 0)
+    ops.curve.subdivide(number_cuts = 2)
 
     # Randomize the vertices of the bezier circle.
     # offset [-inf .. inf], uniform [0.0 .. 1.0],
     # normal [0.0 .. 1.0], RNG seed [0 .. 10000].
-    ops.transform.vertex_random(offset=1.0, uniform=0.1, normal=0.0, seed=0)
+    ops.transform.vertex_random(offset=1.0, uniform=0.1, normal=0.0, seed=int(RandFloat(0, 10000)))
 
     # Scale the curve while in edit mode.
     ops.transform.resize(
@@ -78,7 +78,7 @@ def GenerateRandomCurve(curve_name = 'MyCurve') :
 
     obj_data.bevel_object = bevel_control
     ops.object.mode_set(mode='OBJECT')
-    
+
     mat = obj_data.materials.get("Material")
     if mat == None:
         # create material
@@ -121,7 +121,7 @@ def GenerateManyCurveImages(num_img) :
         GenerateRenderResult('camera', ('%.' + str(l) + 'd') % _)
 
 def GenerateCameras(num_camera, is_plane = False) :
-    if not is_plane : 
+    if not is_plane :
         n = int(math.sqrt(num_camera))
         for i in range(n) :
             for j in range(n) :
@@ -129,14 +129,14 @@ def GenerateCameras(num_camera, is_plane = False) :
                 b = math.pi * (-0.5) + (math.pi / n * (j + 0.5))
                 x = 10 * math.cos(a) * math.cos(b)
                 y = 10 * math.sin(a) * math.cos(b)
-                z = 10 * math.sin(b)   
+                z = 10 * math.sin(b)
                 ops.object.camera_add(
                     view_align=True,
                     enter_editmode=False,
                     location=(x, y, z)
                 )
                 context.active_object.name = 'Camera.' + str(i * n + j)
-                context.active_object.data.name = 'Camera.' + str(i * n + j) 
+                context.active_object.data.name = 'Camera.' + str(i * n + j)
     else :
         n = num_camera
         for i in range(n) :
@@ -151,7 +151,7 @@ def GenerateCameras(num_camera, is_plane = False) :
             )
             context.active_object.name = 'Camera.' + str(i)
             context.active_object.data.name = 'Camera.' + str(i)
-            
+
 
 def MakeCamerasLookAt(curve_name = 'MyCurve') :
     for ob in context.scene.objects :
@@ -162,7 +162,7 @@ def MakeCamerasLookAt(curve_name = 'MyCurve') :
         context.object.constraints["Track To"].target = data.objects[curve_name]
         context.object.constraints["Track To"].track_axis = 'TRACK_NEGATIVE_Z'
         context.object.constraints["Track To"].up_axis = 'UP_Y'
-        
+
 def GenerateCurveImagesWithManyCameras(num_camera, is_plane = False) :
     ClearAllObjects()
     GenerateRandomCurve('MyCurve')
@@ -196,7 +196,7 @@ def GetSensorFit(sensor_fit, size_x, size_y):
 
 # Build intrinsic camera parameters from Blender camera data
 #
-# See notes on this in 
+# See notes on this in
 # blender.stackexchange.com/questions/15102/what-is-blenders-camera-projection-matrix-model
 # as well as
 # https://blender.stackexchange.com/a/120063/3581
@@ -235,7 +235,7 @@ def GetCalibrationMatrixKFromBlender(camd):
     return K
 
 # Returns camera rotation and translation matrices from Blender.
-# 
+#
 # There are 3 coordinate systems involved:
 #    1. The World coordinates: "world"
 #       - right-handed
@@ -245,7 +245,7 @@ def GetCalibrationMatrixKFromBlender(camd):
 #       - right-handed: negative z look-at direction
 #    3. The desired computer vision camera coordinates: "cv"
 #       - x is horizontal
-#       - y is down (to align to the actual pixel coordinates 
+#       - y is down (to align to the actual pixel coordinates
 #         used in digital images)
 #       - right-handed: positive z look-at direction
 
@@ -256,7 +256,7 @@ def Get3x4RTMatrixFromBlender(cam):
         (0, -1, 0),
         (0, 0, -1)))
 
-    # Transpose since the rotation is object rotation, 
+    # Transpose since the rotation is object rotation,
     # and we want coordinate rotation
     # R_world2bcam = cam.rotation_euler.to_matrix().transposed()
     # T_world2bcam = -1*R_world2bcam * location
@@ -268,7 +268,7 @@ def Get3x4RTMatrixFromBlender(cam):
 
     # Convert camera location to translation vector used in coordinate changes
     # T_world2bcam = -1*R_world2bcam*cam.location
-    # Use location from matrix_world to account for constraints:     
+    # Use location from matrix_world to account for constraints:
     T_world2bcam = -1*R_world2bcam * location
     print('T_world2bcam = ' + str(T_world2bcam))
     # Build the coordinate transform matrix from world to computer vision camera
