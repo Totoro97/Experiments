@@ -50,3 +50,4 @@ CTestTestfile.cmake
 ThirdParty
 .idea
 cmake-build-debug
+.directory
